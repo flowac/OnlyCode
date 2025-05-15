@@ -12,7 +12,7 @@ Use Ubuntu, or WSL2
 ### Main
 | Setup | Don't install CPU only packages if CUDA versions were installed |
 | --- | --- |
-| base | pip3 install mediapipe datasets tf-keras transformers pandas matplotlib tqdm flax scikit-learn hf_xet torch |
+| base | pip3 install mediapipe datasets tf-keras transformers pandas matplotlib tqdm flax scikit-learn hf_xet torch keras-ocr |
 | CPU | pip3 install opencv-python tensorflow |
 
 

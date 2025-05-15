@@ -1,0 +1,10 @@
+# Patch for
+# /lib/python3.12/site-packages/keras_ocr/recognition.py
+279,280c279,282
+<             kernel_initializer=tf.constant_initializer(np.zeros((64, 6), dtype="float32")),
+<             bias_initializer=tf.constant_initializer(np.array([[1, 0, 0], [0, 1, 0]], dtype="float32").flatten()),
+---
+>             weights=[
+>                 np.zeros((64, 6), dtype="float32"),
+>                 np.array([[1, 0, 0], [0, 1, 0]], dtype="float32").flatten(),
+>             ],

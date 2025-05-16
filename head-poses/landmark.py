@@ -1,9 +1,16 @@
 #@markdown We implemented some functions to visualize the face landmark detection results. <br/> Run the following cell to activate the functions.
 
+import sys, time
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import matplotlib.pyplot as plt
+
+img_src = ["image.png"]
+
+if len(sys.argv) > 1:
+    img_src = sys.argv[1]
+
 
 def draw_landmarks_on_image(rgb_image, detection_result):
   face_landmarks_list = detection_result.face_landmarks
@@ -79,16 +86,22 @@ options = vision.FaceLandmarkerOptions(base_options=base_options,
 detector = vision.FaceLandmarker.create_from_options(options)
 
 # STEP 3: Load the input image.
-image = mp.Image.create_from_file("image.png")
+start_time = time.time()
+image = mp.Image.create_from_file(img_src)
 
 # STEP 4: Detect face landmarks from the input image.
 detection_result = detector.detect(image)
 
 # STEP 5: Process the detection result. In this case, visualize it.
 annotated_image = draw_landmarks_on_image(image.numpy_view(), detection_result)
+stop_time = time.time()
+
 cv2.imshow("marked", cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
 cv2.waitKey()
 cv2.destroyAllWindows()
 
 plot_face_blendshapes_bar_graph(detection_result.face_blendshapes[0])
 print(detection_result.facial_transformation_matrixes)
+
+print("Landmark took {} milli seconds".format( (stop_time - start_time) * 1000 ))
+

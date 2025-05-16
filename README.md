@@ -1,5 +1,5 @@
-## Status
-Code samples setup. Need to start collecting data.
+## Tasks
+Go to Issues tab for details
 
 
 ## Setup
@@ -29,12 +29,5 @@ Use Ubuntu, or WSL2
 | voice-mood | https://huggingface.co/SamLowe/roberta-base-go_emotions |
 | voice-text | https://github.com/openai/whisper |
 
+![alt text](https://github.com/flowac/OnlyCode/raw/master/arch.png "arch")
 
-## Plan
-Server side or in browser facial expression recognition and eye tracking  
-Audio analysis (mood / emotions)  
-Typing behavoir heuristics  
-
-
-## Optional Objectives
-CS overwatch type of review system  

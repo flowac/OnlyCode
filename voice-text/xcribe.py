@@ -1,9 +1,17 @@
+import sys
 import whisper
 
-model = whisper.load_model("tiny.en")
-result = model.transcribe("sample1.wav")
-print(result["text"])
+flist = ["sample1.wav", "sample2.wav"]
 
-result = model.transcribe("sample2.wav")
-print(result["text"])
+if len(sys.argv) > 1:
+    flist = []
+    for fname in sys.argv[1:]:
+        flist.append(fname)
+
+model = whisper.load_model("tiny.en")
+
+for idx, fname in enumerate(flist):
+    print("{}. {}:".format(idx, fname))
+    result = model.transcribe(fname)
+    print(result["text"])
 

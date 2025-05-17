@@ -1,8 +1,11 @@
 import sys
 import whisper
-from transformers import BartTokenizer, BartForConditionalGeneration
+from transformers import pipeline, BartTokenizer, BartForConditionalGeneration
 
 flist = ["terry.mp3", "micro-machine.wav"]
+top_k = 5
+top_thres = 0.05
+mood_filter = ["neutral"]
 
 if len(sys.argv) > 1:
     flist = []
@@ -13,13 +16,13 @@ voice2text = whisper.load_model("tiny.en")
 text_model = "facebook/bart-large-cnn"
 tokenizer = BartTokenizer.from_pretrained(text_model)
 summarizer = BartForConditionalGeneration.from_pretrained(text_model)
+classifier = pipeline(task="text-classification", model="SamLowe/roberta-base-go_emotions", top_k=None)
 
-for idx, fname in enumerate(flist):
-    print("\n{}. {}:".format(idx, fname))
+def transcribe(fname):
+    print("\n{}:".format(fname))
     result = voice2text.transcribe(fname)
-    print(result["text"])
+    #print(result["text"])
 
-    print("\nSummary:")
     inputs = tokenizer(result["text"], return_tensors="pt", truncation=True, max_length=1024)
     summary_ids = summarizer.generate(
         inputs.input_ids,
@@ -32,5 +35,24 @@ for idx, fname in enumerate(flist):
 
     # Decode the generated summary
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-    print(summary)
+    print("Summary: {}".format(summary))
+
+    idata = [result["text"]]
+    odata = classifier(idata) 
+    cnt = 0
+    for entry in odata[0]:
+        if entry["label"] not in mood_filter:
+            cnt = cnt + 1
+            if cnt > top_k or entry["score"] < top_thres:
+                break
+            print(entry)
+
+# proposed score calculation:
+# balance of positive and negative emotions
+# if only positive then it means no conflict / no learning
+# if only negative then did not solve problem
+# maybe filter out neutral
+
+for fname in flist:
+    transcribe(fname)
 

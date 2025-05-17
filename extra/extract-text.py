@@ -1,3 +1,4 @@
+import time
 import matplotlib.pyplot as plt
 import keras_ocr
 
@@ -15,7 +16,10 @@ images = [
 
 # Each list of predictions in prediction_groups is a list of
 # (word, box) tuples.
+start_time = time.time()
 prediction_groups = pipeline.recognize(images)
+stop_time = time.time()
+print("OCR took {} milli seconds".format( (stop_time - start_time) * 1000 ))
 
 # Plot the predictions
 #fig, axs = plt.subplots(nrows=len(images), figsize=(20, 20))

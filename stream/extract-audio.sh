@@ -4,6 +4,6 @@ if [ $# -gt 0 ]; then
 fi
 audio="${video}.mp3"
 
-rm $audio
-ffmpeg -i $video -vn -acodec mp3 $audio
+rm -f $audio
+time ffmpeg -i $video -vn -acodec mp3 $audio
 

@@ -8,6 +8,6 @@ if [ $# -gt 0 ]; then
 fi
 prefix="${video}_%02d.png"
 
-rm "${video}*png"
-ffmpeg -i $video -r 0.05 -vf mpdecimate=hi=8000:lo=8000:frac=1 $prefix
+rm -f "${video}*png"
+time ffmpeg -i $video -r 0.05 -vf mpdecimate=hi=8000:lo=8000:frac=1 $prefix
 

@@ -16,17 +16,18 @@ Use Ubuntu, or WSL2
 ### Main
 | Setup | Don't install CPU only packages if CUDA versions were installed |
 | --- | --- |
-| core | sudo apt install ffmpeg python3-pip |
-| base | pip3 install mediapipe datasets tf-keras transformers pandas matplotlib tqdm flax scikit-learn hf_xet torch keras-ocr openai-whisper |
+| core | sudo apt install ffmpeg python3-pip tesseract-ocr |
+| base | pip3 install mediapipe tf-keras transformers flax hf_xet torch openai-whisper |
+| extra | pip3 install datasets matplotlib keras-ocr pandas scikit-learn tqdm |
 | CPU | pip3 install opencv-python tensorflow |
 
 
 ## Reference Docs
 | Repo | Link |
 | --- | --- |
-| head-poses | https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker |
-| image-text | https://keras-ocr.readthedocs.io/en/latest/ |
-| voice-mood | https://huggingface.co/SamLowe/roberta-base-go_emotions |
+| head-pose | https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker |
+| image-text | https://tesseract-ocr.github.io/tessdoc/Installation.html |
+| text-mood | https://huggingface.co/SamLowe/roberta-base-go_emotions |
 | voice-text | https://github.com/openai/whisper |
 
 ![alt text](https://github.com/flowac/OnlyCode/raw/master/arch.png "arch")

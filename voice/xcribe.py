@@ -1,4 +1,4 @@
-import sys
+import sys, time
 import whisper
 from transformers import pipeline, BartTokenizer, BartForConditionalGeneration
 
@@ -8,9 +8,7 @@ top_thres = 0.05
 mood_filter = ["neutral"]
 
 if len(sys.argv) > 1:
-    flist = []
-    for fname in sys.argv[1:]:
-        flist.append(fname)
+    flist = sys.argv[1:]
 
 voice2text = whisper.load_model("tiny.en")
 text_model = "facebook/bart-large-cnn"
@@ -19,7 +17,7 @@ summarizer = BartForConditionalGeneration.from_pretrained(text_model)
 classifier = pipeline(task="text-classification", model="SamLowe/roberta-base-go_emotions", top_k=None)
 
 def transcribe(fname):
-    print("\n{}:".format(fname))
+    print(f'\n{fname}:')
     result = voice2text.transcribe(fname)
     #print(result["text"])
 
@@ -35,7 +33,7 @@ def transcribe(fname):
 
     # Decode the generated summary
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-    print("Summary: {}".format(summary))
+    print(f'Summary: {summary}')
 
     idata = [result["text"]]
     odata = classifier(idata) 
@@ -54,5 +52,8 @@ def transcribe(fname):
 # maybe filter out neutral
 
 for fname in flist:
+    start_time = time.time()
     transcribe(fname)
+    stop_time = time.time()
+    print(f'{(stop_time - start_time) * 1000} ms')
 

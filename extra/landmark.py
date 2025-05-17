@@ -6,7 +6,7 @@ from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import matplotlib.pyplot as plt
 
-img_src = ["image.png"]
+img_src = "image.png"
 
 if len(sys.argv) > 1:
     img_src = sys.argv[1]

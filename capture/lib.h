@@ -5,11 +5,14 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+#include <iostream>
+
 #include <QApplication>
 #include <QDateTime>
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include <QScreen>
+#include <QThread>
 #include <QTimer>
 
 #include <QWidget>
@@ -35,20 +38,34 @@ typedef struct
     QPixmap pix;
 } WindowInfo;
 
+class SelectButton : public QPushButton
+{Q_OBJECT
+public:
+    SelectButton(QWidget *p, HWND id) : QPushButton(p), _id(id) {}
+public slots:
+    void clicked() {emit selected(_id);}
+signals:
+    void selected(HWND);
+private:
+    HWND _id;
+};
+
 class App : public QWidget
 {Q_OBJECT
 public:
     App();
 
+public slots:
+    void _quit() {QApplication::quit();}
+    void _select(HWND id);
+
 protected:
     void keyPressEvent(QKeyEvent *evt) override;
 
-private slots:
-    void _quit();
-
 private:
-    QGridLayout *lay_select{0}; // Window selection panel
     static constexpr int row_lim{5}; // Previews per row
+    HWND capture_target{0};
+    QGridLayout *lay_select; // Window selection panel
     int icon_w, icon_h, icon_space; // Window preview size
 
     void show_list();

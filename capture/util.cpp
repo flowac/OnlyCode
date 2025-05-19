@@ -13,7 +13,7 @@ std::unordered_set<QString> task_filter({
 
 BOOL CALLBACK list_windows(HWND id, LPARAM param)
 {
-    constexpr int TLIM{BUF_80};
+    constexpr int TLIM{60};
     WCHAR title[TLIM];
     if (!IsWindowVisible(id) || GetWindowTextW(id, title, TLIM) == 0) return TRUE;
     QString name = QString::fromWCharArray(title);
@@ -35,6 +35,7 @@ BOOL CALLBACK list_windows(HWND id, LPARAM param)
     DeleteDC(mirror);
     DeleteObject(bmp);
 
+    std::cout << name.u8s << std::endl;
     name += "\n" + QString::number(width) + "x" + QString::number(height);
     auto &wlist = *reinterpret_cast<std::vector<WindowInfo> *>(param);
     wlist.push_back({id, name, QPixmap::fromImage(capture)});
@@ -53,10 +54,11 @@ void App::show_list()
         QVBoxLayout *vbox = new QVBoxLayout(element);
 
         QIcon icon(winfo.pix);
-        QPushButton *button = new QPushButton(element);
+        SelectButton *button = new SelectButton(element, winfo.id);
         button->setIcon(icon);
         button->setIconSize(QSize(icon_w, icon_h));
-        connect(button, SIGNAL(released()), this, SLOT(_quit()));
+        connect(button, SIGNAL(released()), button, SLOT(clicked()));
+        connect(button, SIGNAL(selected(HWND)), this, SLOT(_select(HWND)));
 
         vbox->addWidget(new QLabel(winfo.name, element), 0, Qt::AlignBottom);
         vbox->addWidget(button, 0, Qt::AlignTop);
@@ -73,5 +75,19 @@ void App::show_list()
     geo.setWidth(std::max(1, std::min(lay_select->count(), row_lim)) * iw);
     geo.setHeight(std::max(1, lay_select->count() / row_lim) * ih);
     this->setGeometry(geo);
+}
+
+void App::_select(HWND id)
+{
+    capture_target = id;
+
+    WCHAR title[BUF_200];
+    GetWindowTextW(id, title, BUF_200);
+    std::cout << "Selected window: ";
+    std::wcout << title;
+    std::cout << std::endl << std::flush;
+
+    QThread::msleep(100);
+    _quit();
 }
 

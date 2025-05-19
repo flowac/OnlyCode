@@ -40,8 +40,3 @@ void App::keyPressEvent(QKeyEvent *evt)
     }
 }
 
-void App::_quit()
-{
-    QApplication::quit();
-}
-

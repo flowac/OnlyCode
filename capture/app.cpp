@@ -2,36 +2,46 @@
 
 App::App()
 {
-	QString base, css, fontsize;
-	QBrush brush(QColor(0,0,0), Qt::SolidPattern);
-	QPalette cback = QPalette(QPalette::Window, Qt::black);
-	QSizePolicy szpol = QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	QHBoxLayout *hlay1;
+    QString base, css, fontsize;
+    QPalette cback = QPalette(QPalette::Window, Qt::gray);
+    base = "red";
+    fontsize = QString::number(FONT_SZ);
+    css = "background: black; border:1px solid " + base + "; color: " + base + "; font-size: " + fontsize + "px;";//button
 
-	base = "red";
-	fontsize = QString::number(FONT_SZ);
-	css = "background: black; border:1px solid " + base + "; color: " + base + "; font-size: " + fontsize + "px;";//button
+    lay_select = new QGridLayout(this);
+    setFocusPolicy(Qt::StrongFocus);
+    setPalette(cback);
+    setWindowFlags(Qt::FramelessWindowHint | Qt::BypassWindowManagerHint);
+//    setAttribute(Qt::WA_TranslucentBackground);
+    activateWindow();
+    show();
 
-	hlay1 = new QHBoxLayout(this);
-        std::vector<QString> plist = {"test.png"};
+    QPoint qxy(this->x(), this->y());
+    QScreen *qscr = QGuiApplication::screenAt(qxy);
+    QRect geo = qscr->availableGeometry();
+    icon_w = geo.width() * 0.8 / row_lim;
+    icon_h = geo.height() * icon_w / geo.width();
+    icon_space = geo.width() / 100;
+    geo.setX(geo.x() + geo.width() / 16);
+    geo.setY(geo.y() + geo.height() / 8);
+    geo.setWidth(500);
+    geo.setHeight(500);
+    setGeometry(geo);
 
-        for (auto &element : plist)
-        {
-            QPixmap pixmap(element);
-            QIcon ButtonIcon(pixmap);
-            QPushButton *button = new QPushButton(this);
-            button->setIcon(ButtonIcon);
-            button->setIconSize(pixmap.rect().size());
-	    hlay1->addWidget(button);
-        }
+    show_list();
+}
 
-	this->setPalette(cback);
-	this->activateWindow();
-	this->show();
+void App::keyPressEvent(QKeyEvent *evt)
+{
+    switch (evt->key())
+    {
+    case Qt::Key_Escape:
+        _quit(); break;
+    }
 }
 
 void App::_quit()
 {
-	QApplication::quit();
+    QApplication::quit();
 }
 

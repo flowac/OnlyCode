@@ -5,9 +5,9 @@ OBJECTS_DIR	= bin
 QT		+= core network widgets
 RC_ICONS	= img/flow.ico
 
-#DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += lib.h
-SOURCES += app.cpp main.cpp
+SOURCES += app.cpp main.cpp util.cpp
 
 QMAKE_CXXFLAGS += -std=c++20
 

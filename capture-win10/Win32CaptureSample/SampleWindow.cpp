@@ -95,10 +95,6 @@ LRESULT SampleWindow::MessageHandler(UINT const message, WPARAM const wparam, LP
                 {
                     StopCapture();
                 }
-                else if (hwnd == m_snapshotButton)
-                {
-                    OnSnapshotButtonClicked();
-                }
             }
             break;
         }
@@ -119,7 +115,6 @@ void SampleWindow::OnCaptureStarted(winrt::GraphicsCaptureItem const& item)
     m_itemClosedRevoker = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosed });
     SetSubTitle(std::wstring(item.DisplayName()));
     EnableWindow(m_stopButton, true);
-    EnableWindow(m_snapshotButton, true);
 }
 
 winrt::fire_and_forget SampleWindow::OnPickerButtonClicked()
@@ -129,15 +124,6 @@ winrt::fire_and_forget SampleWindow::OnPickerButtonClicked()
     if (selectedItem)
     {
         OnCaptureStarted(selectedItem);
-    }
-}
-
-winrt::fire_and_forget SampleWindow::OnSnapshotButtonClicked()
-{
-    auto file = co_await m_app->TakeSnapshotAsync();
-    if (file != nullptr)
-    {
-        co_await winrt::Launcher::LaunchFileAsync(file);
     }
 }
 
@@ -155,9 +141,6 @@ void SampleWindow::CreateControls(HINSTANCE instance)
 
     // Create stop capture button
     m_stopButton = controls.CreateControl(util::ControlType::Button, L"Stop Capture", WS_DISABLED);
-
-    // Create independent snapshot button
-    m_snapshotButton = controls.CreateControl(util::ControlType::Button, L"Take Snapshot", WS_DISABLED);
 }
 
 void SampleWindow::SetSubTitle(std::wstring const& text)
@@ -175,7 +158,6 @@ void SampleWindow::StopCapture()
     m_app->StopCapture();
     SetSubTitle(L"");
     EnableWindow(m_stopButton, false);
-    EnableWindow(m_snapshotButton, false);
 }
 
 void SampleWindow::OnCaptureItemClosed(winrt::GraphicsCaptureItem const&, winrt::IInspectable const&)

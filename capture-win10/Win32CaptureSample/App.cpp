@@ -52,42 +52,15 @@ App::App(winrt::ContainerVisual root)
     auto d3dDevice = util::CreateD3D11Device();
     auto dxgiDevice = d3dDevice.as<IDXGIDevice>();
     m_device = CreateDirect3DDevice(dxgiDevice.get());
+
+    m_timer = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
+    m_timer.Interval(std::chrono::milliseconds{ 2000 });
+    auto token = m_timer.Tick({ this, &App::OnTick });
 }
 
-winrt::GraphicsCaptureItem App::TryStartCaptureFromWindowHandle(HWND hwnd)
+void App::OnTick(winrt::IInspectable const &sender, winrt::IInspectable const &event)
 {
-    winrt::GraphicsCaptureItem item{ nullptr };
-    try
-    {
-        item = util::CreateCaptureItemForWindow(hwnd);
-        StartCaptureFromItem(item);
-    }
-    catch (winrt::hresult_error const& error)
-    {
-        MessageBoxW(m_mainWindow,
-            error.message().c_str(),
-            L"Cap",
-            MB_OK | MB_ICONERROR);
-    }
-    return item;
-}
-
-winrt::GraphicsCaptureItem App::TryStartCaptureFromMonitorHandle(HMONITOR hmon)
-{
-    winrt::GraphicsCaptureItem item{ nullptr };
-    try
-    {
-        item = util::CreateCaptureItemForMonitor(hmon);
-        StartCaptureFromItem(item);
-    }
-    catch (winrt::hresult_error const& error)
-    {
-        MessageBoxW(m_mainWindow,
-            error.message().c_str(),
-            L"Cap",
-            MB_OK | MB_ICONERROR);
-    }
-    return item;
+    TakeSnapshotAsync();
 }
 
 winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAsync()
@@ -105,6 +78,8 @@ winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAs
         // requirement. See the README if you're unsure of which version of 'Create' to use.
         co_await wil::resume_foreground(m_mainThread);
         StartCaptureFromItem(item);
+
+        m_timer.Start();
     }
 
     co_return item;
@@ -112,64 +87,19 @@ winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAs
 
 winrt::IAsyncOperation<winrt::StorageFile> App::TakeSnapshotAsync()
 {
-    // Use what we're currently capturing
-    if (m_capture == nullptr)
-    {
-        co_return nullptr;
-    }
+    if (m_capture == nullptr) co_return nullptr;
     auto item = m_capture->CaptureItem();
-
-    // Ask the user where they want to save the snapshot.
-    auto savePicker = winrt::FileSavePicker();
-    InitializeObjectWithWindowHandle(savePicker);
-    savePicker.SuggestedStartLocation(winrt::PickerLocationId::PicturesLibrary);
-    savePicker.SuggestedFileName(L"snapshot");
-    savePicker.DefaultFileExtension(L".png");
-    savePicker.FileTypeChoices().Clear();
-    savePicker.FileTypeChoices().Insert(L"PNG image", winrt::single_threaded_vector<winrt::hstring>({ L".png" }));
-    savePicker.FileTypeChoices().Insert(L"JPG image", winrt::single_threaded_vector<winrt::hstring>({ L".jpg" }));
-    auto file = co_await savePicker.PickSaveFileAsync();
-    if (file == nullptr)
-    {
-        co_return nullptr;
-    }
+    auto file = co_await winrt::StorageFile::GetFileFromPathAsync(L"C:\\Users\\test1\\Downloads\\Cap\\x64\\Release\\snapshot.png");
+    if (file == nullptr) co_return nullptr;
 
     // Decide on the pixel format depending on the image type
-    auto fileExtension = file.FileType();
-    winrt::guid fileFormatGuid = {};
-    winrt::BitmapPixelFormat bitmapPixelFormat;
-    winrt::DirectXPixelFormat pixelFormat;
-    if (fileExtension == L".png")
-    {
-        fileFormatGuid = winrt::BitmapEncoder::PngEncoderId();
-        bitmapPixelFormat = winrt::BitmapPixelFormat::Bgra8;
-        pixelFormat = winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized;
-    }
-    else if (fileExtension == L".jpg" || fileExtension == L".jpeg")
-    {
-        fileFormatGuid = winrt::BitmapEncoder::JpegEncoderId();
-        bitmapPixelFormat = winrt::BitmapPixelFormat::Bgra8;
-        pixelFormat = winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized;
-    }
-    else
-    {
-        // Unsupported
-        co_await wil::resume_foreground(m_mainThread);
-        MessageBoxW(nullptr,
-            L"Unsupported file format!",
-            L"Cap",
-            MB_OK | MB_ICONERROR);
-        co_return nullptr;
-    }
+    winrt::guid fileFormatGuid = winrt::BitmapEncoder::PngEncoderId();
+    winrt::BitmapPixelFormat bitmapPixelFormat = winrt::BitmapPixelFormat::Bgra8;
+    winrt::DirectXPixelFormat pixelFormat = winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized;
 
     {
-        // Get the file stream
         auto stream = co_await file.OpenAsync(winrt::FileAccessMode::ReadWrite);
-
-        // Initialize the encoder
         auto encoder = co_await winrt::BitmapEncoder::CreateAsync(fileFormatGuid, stream);
-
-        // Take the snapshot
         auto texture = co_await CaptureSnapshot::TakeAsync(m_device, item, pixelFormat);
 
         // Encode the image
@@ -214,6 +144,7 @@ void App::InitializeObjectWithWindowHandle(winrt::Windows::Foundation::IUnknown 
 
 void App::StopCapture()
 {
+	m_timer.Stop();
     if (m_capture)
     {
         m_capture->Close();

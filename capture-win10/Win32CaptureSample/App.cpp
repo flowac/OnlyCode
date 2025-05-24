@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "App.h"
 #include "CaptureSnapshot.h"
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 namespace winrt
 {
@@ -65,6 +68,9 @@ void App::OnTick(winrt::IInspectable const &sender, winrt::IInspectable const &e
 
 winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAsync()
 {
+    m_timer.Stop();
+	if (!pwd) pwd = co_await winrt::StorageFolder::GetFolderFromPathAsync(std::filesystem::current_path().c_str());
+
     auto capturePicker = winrt::GraphicsCapturePicker();
     InitializeObjectWithWindowHandle(capturePicker);
     auto item = co_await capturePicker.PickSingleItemAsync();
@@ -89,8 +95,13 @@ winrt::IAsyncOperation<winrt::StorageFile> App::TakeSnapshotAsync()
 {
     if (m_capture == nullptr) co_return nullptr;
     auto item = m_capture->CaptureItem();
-    auto file = co_await winrt::StorageFile::GetFileFromPathAsync(L"C:\\Users\\test1\\Downloads\\Cap\\x64\\Release\\snapshot.png");
-    if (file == nullptr) co_return nullptr;
+    auto file = co_await pwd.CreateFileAsync(L"cap.png", winrt::CreationCollisionOption::ReplaceExisting);
+    if (!file)
+    {
+        // Change this to a log later
+        MessageBoxW(m_mainWindow, L"Can't open temporary output file", L"Cap", MB_OK | MB_ICONERROR);
+        co_return nullptr;
+    }
 
     // Decide on the pixel format depending on the image type
     winrt::guid fileFormatGuid = winrt::BitmapEncoder::PngEncoderId();

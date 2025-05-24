@@ -24,6 +24,7 @@ private:
     winrt::Windows::UI::Composition::CompositionSurfaceBrush m_brush{ nullptr };
 
     HWND m_mainWindow{ nullptr };
+    winrt::Windows::Storage::StorageFolder pwd{ nullptr };
 
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice m_device{ nullptr };
     std::unique_ptr<SimpleCapture> m_capture{ nullptr };

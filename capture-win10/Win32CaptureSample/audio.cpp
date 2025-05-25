@@ -36,26 +36,28 @@ void SaveWav(BYTE* pData, DWORD dataSize, WAVEFORMATEX &srcFormat)
 
     WAVEFORMATEX dstFormat;
     dstFormat.wFormatTag = WAVE_FORMAT_PCM;
-    dstFormat.nChannels = 2;
+    dstFormat.nChannels = 1;
     dstFormat.nSamplesPerSec = 44100;
     dstFormat.wBitsPerSample = 16;
     dstFormat.nBlockAlign = dstFormat.nChannels * (dstFormat.wBitsPerSample / 8);
     dstFormat.nAvgBytesPerSec = dstFormat.nSamplesPerSec * dstFormat.nBlockAlign;
     dstFormat.cbSize = 0;
     int frames = dataSize / (srcFormat.wBitsPerSample / 8);
-    std::vector<int16_t> output(frames);
+    std::vector<int16_t> output(frames / 2);
 
-    for (UINT32 i = 0; i < frames; ++i) {
-        float sample = reinterpret_cast<float*>(pData)[i];
-        int16_t pcmSample = static_cast<int16_t>(max(-1.0f, min(1.0f, sample)) * 32767);
-		output[i] = pcmSample;
+    for (UINT32 i = 0, j = 0; i < frames; i += 2, ++j) {
+        float sample1 = reinterpret_cast<float*>(pData)[i];
+        float sample2 = reinterpret_cast<float*>(pData)[i + 1];
+        int16_t pcmSample1 = static_cast<int16_t>(max(-1.0f, min(1.0f, sample1)) * 32767);
+        int16_t pcmSample2 = static_cast<int16_t>(max(-1.0f, min(1.0f, sample2)) * 32767);
+        output[j] = abs(pcmSample1) > abs(pcmSample2) ? pcmSample1 : pcmSample2;
     }
 
     std::ofstream file("output.wav", std::ios::binary | std::ios_base::out | std::ios_base::trunc);
     if (!file.is_open()) throw std::runtime_error("Could not open output file");
 
     WriteWAVHeader(file, &dstFormat, dataSize);
-    file.write(reinterpret_cast<const char*>(output.data()), frames * 2);
+    file.write(reinterpret_cast<const char*>(output.data()), frames);
     file.close();
 }
 

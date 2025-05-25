@@ -27,8 +27,6 @@
 #include <winrt/Windows.UI.Composition.h>
 #include <winrt/Windows.UI.Composition.Desktop.h>
 #include <winrt/Windows.UI.Popups.h>
-#include <winrt/Windows.UI.Xaml.h>
-#include <winrt/Windows.ApplicationModel.h>
 
 // STL
 #include <atomic>

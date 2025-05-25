@@ -59,6 +59,10 @@ App::App(winrt::ContainerVisual root)
     m_timer = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
     m_timer.Interval(std::chrono::milliseconds{ 2000 });
     auto token = m_timer.Tick({ this, &App::OnTick });
+
+    audio_ready = m_record.Initialize();
+	assert(audio_ready, L"Audio recording failed to initialize");
+    if (audio_ready) m_record.Start();
 }
 
 void App::OnTick(winrt::IInspectable const &sender, winrt::IInspectable const &event)

@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="audio.cpp" />
     <ClCompile Include="CaptureSnapshot.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SampleWindow.cpp" />
@@ -150,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="audio.h" />
     <ClInclude Include="CaptureSnapshot.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SampleWindow.h" />

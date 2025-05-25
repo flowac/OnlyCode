@@ -1,5 +1,6 @@
 #pragma once
 #include "SimpleCapture.h"
+#include "audio.h"
 
 class App
 {
@@ -25,6 +26,8 @@ private:
 
     HWND m_mainWindow{ nullptr };
     winrt::Windows::Storage::StorageFolder pwd{ nullptr };
+    AudioCapture m_record;
+    bool audio_ready{ false };
 
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice m_device{ nullptr };
     std::unique_ptr<SimpleCapture> m_capture{ nullptr };

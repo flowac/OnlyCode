@@ -1,4 +1,3 @@
-import os.path
 import whisper
 from transformers import pipeline, BartTokenizer, BartForConditionalGeneration
 
@@ -48,9 +47,6 @@ class voice:
 
     # do not call directly
     def _run(self, fname):
-        if not os.path.isfile(fname):
-            return None, None
-
         result = self.voice2text.transcribe(fname)
         word_count_total = len(result["text"].split())
         print(f'\n{fname}: {word_count_total} words')

@@ -4,7 +4,7 @@ import voice
 # input should be at least 30 second segments
 # maybe 1 minute chunks
 
-flist = ["terry.mp3", "micro-machine.wav", "voice-test.py"]
+flist = ["data/terry.mp3", "data/micro-machine.wav", "data/bad.wav"]
 if len(sys.argv) > 1:
     flist = sys.argv[1:]
 

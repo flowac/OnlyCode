@@ -42,9 +42,3 @@ def proc_voice():
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=port)
 
-# status check: curl -X GET http://127.0.0.1:7001
-# send request: curl -X POST -F "file=@terry.mp3" 127.0.0.1:7001
-# upload limit: curl -X POST -F "file=@micro-machine.wav" 127.0.0.1:7001
-# format check: curl -X POST -F "file=@badname" 127.0.0.1:7001
-# corrupted   : curl -X POST -F "file=@bad.wav" 127.0.0.1:7001
-

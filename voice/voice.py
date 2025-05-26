@@ -36,7 +36,6 @@ class voice:
             if pn_total >= 4:
                 impact = "high"
 
-        print(f'Result: density = {density}, impact = {impact}')
         return density, impact
 
     def run(self, fname):

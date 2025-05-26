@@ -12,7 +12,8 @@ vc = voice.voice()
 
 for fname in flist:
     start_time = time.time()
-    vc.run(fname)
+    density, impact = vc.run(fname)
     stop_time = time.time()
     print(f'{(stop_time - start_time) * 1000} ms')
+    print(f'Result: density = {density}, impact = {impact}')
 

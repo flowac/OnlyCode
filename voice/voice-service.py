@@ -1,6 +1,5 @@
-import os, sys, time
+import os, sys, time, uuid
 from flask import Flask, jsonify, request
-from werkzeug.utils import secure_filename
 import voice
 
 upload_dir = "tmp/"
@@ -14,27 +13,25 @@ os.makedirs(upload_dir, exist_ok=True)
 vc = voice.voice()
 
 def file_ok(fname):
-    return fname.rsplit('.', 1)[-1].lower() in valid_ext
+    ext = fname.rsplit('.', 1)[-1].lower()
+    return ext in valid_ext
 
 @app.route("/", methods=["GET", "POST"])
 def proc_voice():
+    density = None
+    impact = None
     if request.method == "GET":
         return "ready", 200
 
-    file = request.files["file"]
-    fname = secure_filename(file.filename)
-    if not file_ok(fname):
-        return "invalid", 204
-
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
-    density, impact = vc.run(fname)
     try:
-        os.remove(upload_dir + fname)
-        print(f"Deleted '{upload_dir}{fname}'.")
-    except FileNotFoundError:
-        print(f"Error: File '{upload_dir}{fname}' not found.")
-    except PermissionError:
-        print(f"Error: Permission denied to delete '{upload_dir}{fname}'.")
+        file = request.files["file"]
+        if not file_ok(file.filename):
+            return "invalid", 204
+        fname = os.path.join(app.config['UPLOAD_FOLDER'], str(uuid.uuid4()))
+
+        file.save(fname)
+        density, impact = vc.run(fname)
+        os.remove(fname)
     except OSError as e:
         print(f"Error: An unexpected error occurred: {e}")
 

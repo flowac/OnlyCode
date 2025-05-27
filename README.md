@@ -1,17 +1,22 @@
 ## Tasks
 Go to Issues tab for details
 
+## Quick Checks
+| Dir | Command |
+| --- | --- |
+| head-poses | curl -X POST -F file=@head-poses/data/image.jpg 18.116.80.5:7002 |
+| image | curl -X POST -F file=@image/data/test1.png 18.116.80.5:7003 |
+| voice | Not hosted on AWS due to 1 GB RAM limit on free instance |
+
 
 ## Setup
-| Type | Recommended |
+| Hardware | Recommended |
 | --- | --- |
-| OS | Ubuntu or WSL2 |
 | CPU | 1 core |
 | RAM | 2 GB |
-| Disk | 30 GB |
+| Disk | 20 GB |
 
-### Main
-| Setup | WSL installs CUDA packages by default |
+| Package | Ubuntu 24.04 or Ubuntu under WSL2 / AWS |
 | --- | --- |
 | core | sudo apt install ffmpeg python3-pip tesseract-ocr |
 | base | pip3 install mediapipe tf-keras transformers torch openai-whisper pytesseract |
@@ -28,10 +33,10 @@ Go to Issues tab for details
 ## Reference Docs
 | Repo | Link |
 | --- | --- |
-| head-pose | https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker |
-| image-text | https://tesseract-ocr.github.io/tessdoc/Installation.html |
-| text-mood | https://huggingface.co/SamLowe/roberta-base-go_emotions |
-| voice-text | https://github.com/openai/whisper |
+| head pose | https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker |
+| image to text | https://tesseract-ocr.github.io/tessdoc/Installation.html |
+| text to mood | https://huggingface.co/SamLowe/roberta-base-go_emotions |
+| voice to text | https://github.com/openai/whisper |
 
 ![alt text](https://github.com/flowac/OnlyCode/raw/master/arch.png "arch")
 

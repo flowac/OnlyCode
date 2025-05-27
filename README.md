@@ -17,7 +17,7 @@ Go to Issues tab for details
 | base | pip3 install mediapipe tf-keras transformers torch openai-whisper pytesseract |
 | extra | pip3 install datasets flax hf_xet matplotlib keras-ocr pandas scikit-learn |
 | CPU | pip3 install opencv-python tensorflow |
-| AWS | pip3 install flask |
+| AWS | pip3 install flask waitress |
 
 ### GPU
 | Setup | This is optional and not recommended |

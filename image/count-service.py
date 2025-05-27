@@ -1,5 +1,6 @@
 import os, sys, time, uuid
 from flask import Flask, jsonify, request
+from waitress import serve
 import count
 
 upload_dir = "tmp/"
@@ -40,4 +41,5 @@ def proc_image():
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=port)
+    #serve(app, host="0.0.0.0", port=port)
 

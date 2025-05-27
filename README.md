@@ -7,25 +7,22 @@ Go to Issues tab for details
 | --- | --- |
 | OS | Ubuntu or WSL2 |
 | CPU | 1 core |
-| RAM | 4 GB |
+| RAM | 2 GB |
 | Disk | 30 GB |
 
 ### Main
-| Setup | Don't install CPU only packages if CUDA versions were installed |
+| Setup | WSL installs CUDA packages by default |
 | --- | --- |
 | core | sudo apt install ffmpeg python3-pip tesseract-ocr |
 | base | pip3 install mediapipe tf-keras transformers torch openai-whisper pytesseract |
+| server | pip3 install flask waitress |
 | extra | pip3 install datasets flax hf_xet matplotlib keras-ocr pandas scikit-learn |
-| CPU | pip3 install opencv-python tensorflow |
-| AWS | pip3 install flask waitress |
 
-### GPU
-| Setup | This is optional and not recommended |
+### WSL Windows 10 X11 Forwarding
+| Setup | This is optional |
 | --- | --- |
-| Win11 | Skip to CUDA step |
 | Win10 | Start VcXsrv, allow firewall, multi window, no client, no native opengl, yes disable access control |
 | WSL | export GALLIUM_DRIVER=d3d12 ; sudo apt install xdg-utils mesa-utils ; glxinfo -B |
-| CUDA | pip3 install jax[cuda12] opencv-cuda tensorflow[and-cuda] |
 
 
 ## Reference Docs

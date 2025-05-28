@@ -5,6 +5,9 @@
 #include <fstream>
 #include <iostream>
 
+#pragma comment(lib, "windowscodecs.lib")
+static std::ofstream LOGA("app.log", std::ios_base::out | std::ios_base::trunc);
+
 namespace winrt
 {
     using namespace Windows::Foundation;
@@ -95,44 +98,106 @@ winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAs
     co_return item;
 }
 
-winrt::IAsyncOperation<winrt::StorageFile> App::TakeSnapshotAsync()
+std::vector<uint8_t> DownscalePixels(std::vector<uint8_t> srcPixels, uint32_t srcWidth, uint32_t srcHeight, float scale)
 {
-    if (m_capture == nullptr) co_return nullptr;
-    auto item = m_capture->CaptureItem();
-    auto file = co_await pwd.CreateFileAsync(L"cap.png", winrt::CreationCollisionOption::ReplaceExisting);
-    if (!file)
-    {
-        // Change this to a log later
-        MessageBoxW(m_mainWindow, L"Can't open temporary output file", L"Cap", MB_OK | MB_ICONERROR);
-        co_return nullptr;
+    uint32_t dstWidth = srcWidth / scale;
+    uint32_t dstHeight = srcHeight / scale;
+    std::vector<uint8_t> dstPixels(dstWidth * dstHeight * 4);
+
+    if (scale <= 1) {
+        LOGA << "No downscaling needed, returning original pixels\n";
+        return srcPixels;
     }
+    LOGA << "Downscaling to " << dstWidth << "x" << dstHeight << " aka factor of " << scale << std::endl;
 
-    // Decide on the pixel format depending on the image type
-    winrt::guid fileFormatGuid = winrt::BitmapEncoder::PngEncoderId();
-    winrt::BitmapPixelFormat bitmapPixelFormat = winrt::BitmapPixelFormat::Bgra8;
-    winrt::DirectXPixelFormat pixelFormat = winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized;
+    for (uint32_t y = 0; y < dstHeight; ++y) {
+        uint32_t srcY = y * scale;
+        for (uint32_t x = 0; x < dstWidth; ++x) {
+            uint32_t srcX = x * scale;
+            memcpy(&dstPixels[(y * dstWidth + x) * 4], &srcPixels[(srcY * srcWidth + srcX) * 4], 4);
+        }
+    }
+    return dstPixels;
+}
 
-    {
+HRESULT SaveGray8AsPng(const std::vector<uint8_t>& grayData, UINT width, UINT height, LPCWSTR outputFilePath)
+{
+    HRESULT hr = S_OK;
+    IWICImagingFactory* pFactory = nullptr;
+    IWICBitmapEncoder* pEncoder = nullptr;
+    IWICBitmapFrameEncode* pFrame = nullptr;
+    IWICStream* pStream = nullptr;
+    WICPixelFormatGUID format = GUID_WICPixelFormat8bppGray;
+    UINT stride = width;
+
+    if (SUCCEEDED(hr)) hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFactory));
+    if (SUCCEEDED(hr)) hr = pFactory->CreateStream(&pStream);
+    if (SUCCEEDED(hr)) hr = pStream->InitializeFromFilename(outputFilePath, GENERIC_WRITE);
+    if (SUCCEEDED(hr)) hr = pFactory->CreateEncoder(GUID_ContainerFormatPng, nullptr, &pEncoder);
+    if (SUCCEEDED(hr)) hr = pEncoder->Initialize(pStream, WICBitmapEncoderNoCache);
+    if (SUCCEEDED(hr)) hr = pEncoder->CreateNewFrame(&pFrame, nullptr);
+    if (SUCCEEDED(hr)) hr = pFrame->Initialize(nullptr);  // Default options
+    if (SUCCEEDED(hr)) hr = pFrame->SetSize(width, height);
+    if (SUCCEEDED(hr)) hr = pFrame->SetPixelFormat(&format);
+    if (SUCCEEDED(hr)) hr = pFrame->WritePixels(height, stride, stride * height, const_cast<BYTE*>(grayData.data()));
+    if (SUCCEEDED(hr)) hr = pFrame->Commit();
+    if (SUCCEEDED(hr)) hr = pEncoder->Commit();
+
+    if (pFrame) pFrame->Release();
+    if (pEncoder) pEncoder->Release();
+    if (pStream) pStream->Release();
+    if (pFactory) pFactory->Release();
+    return hr;
+}
+
+winrt::IAsyncOperation<bool> App::TakeSnapshotAsync()
+{
+    if (m_capture == nullptr) co_return false;
+    auto item = m_capture->CaptureItem();
+    auto texture = co_await CaptureSnapshot::TakeAsync(m_device, item, winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized);
+    D3D11_TEXTURE2D_DESC desc = {};
+    texture->GetDesc(&desc);
+    LOGA << "Input is " << desc.Width << "x" << desc.Height << std::endl;
+
+    if (false) {
+        // Scaling down for FaceLandmarker
+		constexpr uint32_t maxWidth = 800;
+		constexpr uint32_t maxHeight = 600;
+        winrt::guid fileFormatGuid = winrt::BitmapEncoder::PngEncoderId();
+        winrt::BitmapPixelFormat bitmapPixelFormat = winrt::BitmapPixelFormat::Bgra8;
+        auto file = co_await pwd.CreateFileAsync(L"cap.png", winrt::CreationCollisionOption::ReplaceExisting);
+        if (!file) {LOGA << "Can't open capture output file\n"; co_return false;}
         auto stream = co_await file.OpenAsync(winrt::FileAccessMode::ReadWrite);
         auto encoder = co_await winrt::BitmapEncoder::CreateAsync(fileFormatGuid, stream);
-        auto texture = co_await CaptureSnapshot::TakeAsync(m_device, item, pixelFormat);
 
-        // Encode the image
-        D3D11_TEXTURE2D_DESC desc = {};
-        texture->GetDesc(&desc);
-        auto bytes = util::CopyBytesFromTexture(texture);
-        encoder.SetPixelData(
-            bitmapPixelFormat,
-            winrt::BitmapAlphaMode::Premultiplied,
-            desc.Width,
-            desc.Height,
-            1.0,
-            1.0,
-            bytes);
+        float scale = 1;
+        for (uint32_t width = desc.Width / scale; width > maxWidth; scale += 0.1, width = desc.Width / scale);
+        for (uint32_t height = desc.Height / scale; height > maxHeight; scale += 0.1, height = desc.Height / scale);
+        int width = desc.Width / scale;
+        int height = desc.Height / scale;
+
+        auto bytes = DownscalePixels(util::CopyBytesFromTexture(texture), desc.Width, desc.Height, scale);
+        encoder.SetPixelData(bitmapPixelFormat, winrt::BitmapAlphaMode::Ignore, width, height, 1.0, 1.0, bytes);
         co_await encoder.FlushAsync();
+    } else {
+        // Gray scale for Tesseract OCR
+        auto bytes = util::CopyBytesFromTexture(texture);
+        std::vector<uint8_t> grayData(desc.Width * desc.Height);
+        for (uint32_t i = 0, j = 0; i < bytes.size(); i += 4, j++) {
+            uint8_t b = bytes[i];
+            uint8_t g = bytes[i + 1];
+            uint8_t r = bytes[i + 2];
+            grayData[j] = static_cast<uint8_t>(0.21f * r + 0.72f * g + 0.07f * b);
+        }
+
+        HRESULT hr = SaveGray8AsPng(grayData, desc.Width, desc.Height, L"cap.png");
+        if (FAILED(hr)) {
+            LOGA << "Failed to save Gray8\n";
+            co_return false;
+        }
     }
 
-    co_return file;
+    co_return true;
 }
 
 void App::StartCaptureFromItem(winrt::GraphicsCaptureItem item)

@@ -9,7 +9,7 @@ public:
     ~App() {}
 
     winrt::Windows::Foundation::IAsyncOperation<winrt::Windows::Graphics::Capture::GraphicsCaptureItem> StartCaptureWithPickerAsync();
-    winrt::Windows::Foundation::IAsyncOperation<winrt::Windows::Storage::StorageFile> TakeSnapshotAsync();
+    winrt::Windows::Foundation::IAsyncOperation<bool> TakeSnapshotAsync();
     void StopCapture();
     void InitializeWithWindow(HWND window);
 

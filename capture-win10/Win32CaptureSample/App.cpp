@@ -60,7 +60,7 @@ App::App(winrt::ContainerVisual root)
     m_device = CreateDirect3DDevice(dxgiDevice.get());
 
     m_timer = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
-    m_timer.Interval(std::chrono::milliseconds{ 2000 });
+    m_timer.Interval(std::chrono::milliseconds{ 5000 });
     auto token = m_timer.Tick({ this, &App::OnTick });
 
     audio_ready = m_record.Initialize();
@@ -152,6 +152,10 @@ HRESULT SaveGray8AsPng(const std::vector<uint8_t>& grayData, UINT width, UINT he
 
 winrt::IAsyncOperation<bool> App::TakeSnapshotAsync()
 {
+	static uint16_t frameCount = 0;
+    WCHAR fname[12] = L"cap.png";
+    if (false) swprintf_s(fname, L"cap%03d.png", ++frameCount);
+
     if (m_capture == nullptr) co_return false;
     auto item = m_capture->CaptureItem();
     auto texture = co_await CaptureSnapshot::TakeAsync(m_device, item, winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized);
@@ -165,7 +169,7 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync()
 		constexpr uint32_t maxHeight = 600;
         winrt::guid fileFormatGuid = winrt::BitmapEncoder::PngEncoderId();
         winrt::BitmapPixelFormat bitmapPixelFormat = winrt::BitmapPixelFormat::Bgra8;
-        auto file = co_await pwd.CreateFileAsync(L"cap.png", winrt::CreationCollisionOption::ReplaceExisting);
+        auto file = co_await pwd.CreateFileAsync(fname, winrt::CreationCollisionOption::ReplaceExisting);
         if (!file) {LOGA << "Can't open capture output file\n"; co_return false;}
         auto stream = co_await file.OpenAsync(winrt::FileAccessMode::ReadWrite);
         auto encoder = co_await winrt::BitmapEncoder::CreateAsync(fileFormatGuid, stream);
@@ -190,7 +194,7 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync()
             grayData[j] = static_cast<uint8_t>(0.21f * r + 0.72f * g + 0.07f * b);
         }
 
-        HRESULT hr = SaveGray8AsPng(grayData, desc.Width, desc.Height, L"cap.png");
+        HRESULT hr = SaveGray8AsPng(grayData, desc.Width, desc.Height, fname);
         if (FAILED(hr)) {
             LOGA << "Failed to save Gray8\n";
             co_return false;

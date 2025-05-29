@@ -1,8 +1,10 @@
 import sys, time
-import cv2
-import pytesseract
+import easyocr
 
 class count:
+    def __init__(self):
+        self.reader = easyocr.Reader(['en'])
+    
     def run(self, fname):
         try:
             return self._run(fname)
@@ -10,9 +12,11 @@ class count:
             return None
 
     def _run(self, fname):
-        image = cv2.imread(fname)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        text = pytesseract.image_to_string(gray, config="--oem 3 --psm 11")
-
-        return len(text.split())
+        result = self.reader.readtext(fname)
+        
+        word_count = 0
+        for _, text, _ in result:
+            word_count += len(text.split())
+        
+        return word_count
 

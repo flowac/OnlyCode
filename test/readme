@@ -1,0 +1,5 @@
+Readme for Testing
+
+# Test OCR on Linux and Windows
+cd /home/amogh/code/OnlyCode/image
+python3 count-test.py

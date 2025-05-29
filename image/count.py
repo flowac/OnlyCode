@@ -3,7 +3,7 @@ import easyocr
 
 class count:
     def __init__(self):
-        self.reader = easyocr.Reader(['en'])
+        self.reader = easyocr.Reader(['en'], gpu=True)
     
     def run(self, fname):
         try:
@@ -12,7 +12,7 @@ class count:
             return None
 
     def _run(self, fname):
-        result = self.reader.readtext(fname)
+        result = self.reader.readtext(fname, width_ths=0.7, height_ths=0.7)
         
         word_count = 0
         for _, text, _ in result:

@@ -1,5 +1,5 @@
 #include "audio.h"
-#include <assert.h>
+#include <lame.h>
 
 static std::ofstream LOGA("audio.log", std::ios_base::out | std::ios_base::trunc);
 
@@ -34,31 +34,57 @@ void SaveWav(BYTE* pData, DWORD dataSize, WAVEFORMATEX &srcFormat)
     LOGA << "bps      " << srcFormat.nAvgBytesPerSec << std::endl;
     LOGA << "bsize    " << srcFormat.cbSize << std::endl;
 
-    WAVEFORMATEX dstFormat;
-    dstFormat.wFormatTag = WAVE_FORMAT_PCM;
-    dstFormat.nChannels = 1;
-    dstFormat.nSamplesPerSec = 44100;
-    dstFormat.wBitsPerSample = 16;
-    dstFormat.nBlockAlign = dstFormat.nChannels * (dstFormat.wBitsPerSample / 8);
-    dstFormat.nAvgBytesPerSec = dstFormat.nSamplesPerSec * dstFormat.nBlockAlign;
-    dstFormat.cbSize = 0;
-    int frames = dataSize / (srcFormat.wBitsPerSample / 8);
-    std::vector<int16_t> output(frames / 2);
+    if (false) {
+        WAVEFORMATEX dstFormat;
+        dstFormat.wFormatTag = WAVE_FORMAT_PCM;
+        dstFormat.nChannels = srcFormat.nChannels;
+        dstFormat.nSamplesPerSec = srcFormat.nSamplesPerSec;
+        dstFormat.wBitsPerSample = 16;
+        dstFormat.nBlockAlign = dstFormat.nChannels * (dstFormat.wBitsPerSample / 8);
+        dstFormat.nAvgBytesPerSec = dstFormat.nSamplesPerSec * dstFormat.nBlockAlign;
+        dstFormat.cbSize = 0;
+        int frames = dataSize / (dstFormat.nChannels * dstFormat.wBitsPerSample / 8);
 
-    for (UINT32 i = 0, j = 0; i < frames; i += 2, ++j) {
-        float sample1 = reinterpret_cast<float*>(pData)[i];
-        float sample2 = reinterpret_cast<float*>(pData)[i + 1];
-        int16_t pcmSample1 = static_cast<int16_t>(max(-1.0f, min(1.0f, sample1)) * 32767);
-        int16_t pcmSample2 = static_cast<int16_t>(max(-1.0f, min(1.0f, sample2)) * 32767);
-        output[j] = abs(pcmSample1) > abs(pcmSample2) ? pcmSample1 : pcmSample2;
+        std::vector<int16_t> output(frames);
+        for (UINT32 i = 0; i < frames; ++i) {
+            float sample = reinterpret_cast<float*>(pData)[i];
+            output[i] = static_cast<int16_t>(max(-1.0f, min(1.0f, sample)) * 32767);
+        }
+
+        std::ofstream file("output.wav", std::ios::binary | std::ios_base::out | std::ios_base::trunc);
+        if (!file.is_open()) throw std::runtime_error("Could not open wav output file");
+
+        WriteWAVHeader(file, &dstFormat, dataSize);
+        file.write(reinterpret_cast<const char*>(output.data()), output.size() * 2);
+        file.close();
     }
 
-    std::ofstream file("output.wav", std::ios::binary | std::ios_base::out | std::ios_base::trunc);
-    if (!file.is_open()) throw std::runtime_error("Could not open output file");
+    std::ofstream mp3("output.mp3", std::ios::binary | std::ios_base::out | std::ios_base::trunc);
+    if (!mp3.is_open()) throw std::runtime_error("Could not open mp3 output file");
+    size_t readv, writev;
+    const int PCM_SIZE = 8192 * 4;
+    const int MP3_SIZE = 8192;
+    uint8_t mp3_buffer[MP3_SIZE];
 
-    WriteWAVHeader(file, &dstFormat, dataSize);
-    file.write(reinterpret_cast<const char*>(output.data()), frames);
-    file.close();
+    lame_t lame = lame_init();
+    lame_set_in_samplerate(lame, srcFormat.nSamplesPerSec);
+    lame_set_VBR(lame, vbr_default);
+    lame_init_params(lame);
+    LOGA << "write mp3 " << dataSize << " bytes\n";
+
+    for (size_t pos = 0; pos < dataSize; pos += readv) {
+        readv = min(PCM_SIZE, dataSize - pos);
+        if (readv > 0) {
+            writev = lame_encode_buffer_interleaved_ieee_float(lame,
+                reinterpret_cast<float*>(pData + pos), readv >> 3, mp3_buffer, MP3_SIZE);
+        } else {
+            writev = lame_encode_flush(lame, mp3_buffer, MP3_SIZE);
+        }
+        mp3.write(reinterpret_cast<const char*>(mp3_buffer), writev);
+    }
+
+    lame_close(lame);
+    mp3.close();
 }
 
 bool AudioCapture::Initialize()
@@ -138,6 +164,7 @@ void AudioCapture::Stop()
 
 void AudioCapture::CaptureThread()
 {
+	constexpr int recordInterval = 60; // seconds
     HRESULT hr;
     WAVEFORMATEX* pFormat = nullptr;
     m_pAudioClient->GetMixFormat(&pFormat);
@@ -148,11 +175,10 @@ void AudioCapture::CaptureThread()
 
     while (!m_terminate)
     {
-        // Check if 10 seconds have passed
         auto currentTime = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
 
-        if (elapsed >= 10 && !accumulatedBuffer.empty())
+        if (elapsed >= recordInterval && !accumulatedBuffer.empty())
         {
             SaveWav(accumulatedBuffer.data(), accumulatedBuffer.size(), *pFormat);
             accumulatedBuffer.clear();

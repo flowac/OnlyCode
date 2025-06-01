@@ -1,10 +1,12 @@
-import sys, time
+import sys
+import time
 import pose
+import json
 
 flist = ["data/image.png", "data/image.jpg", "data/bad.png"]
 if len(sys.argv) > 1:
     flist = sys.argv[1:]
-
+results = []
 po = pose.pose()
 
 for fname in flist:
@@ -17,6 +19,14 @@ for fname in flist:
         print("No features detected")
         continue
 
+    result = {
+        'filename': fname,
+        'features': fbs  # This is a dictionary of feature name → value
+    }
+
+    results.append(result)
     for name, val in fbs.items():
         print(f'{name: <20} {val}')
 
+    with open('results.json', 'w') as f:
+        json.dump(results, f, indent=4)

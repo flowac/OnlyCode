@@ -26,7 +26,10 @@ for fname in flist:
 
     results.append(result)
     for name, val in fbs.items():
-        print(f'{name: <20} {val}')
+        if name == 'head_pose_angles':
+            print(f"{name}: yaw={val['yaw']:.2f}, pitch={val['pitch']:.2f}, roll={val['roll']:.2f}")
+        else:
+            print(f'{name: <20} {val:.4f}')
 
     with open('results.json', 'w') as f:
         json.dump(results, f, indent=4)

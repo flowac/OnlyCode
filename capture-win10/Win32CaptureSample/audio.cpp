@@ -1,6 +1,17 @@
-#include "audio.h"
+#include "pch.h"
+#include <windows.h>
+#include <comdef.h>
+#include <functiondiscoverykeys.h>
+#include <mmeapi.h>
+#include <mmreg.h> // Include this header to define WAVEFORMATEX
 #include <time.h>
+
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "winmm.lib")
+
 #include <lame.h>
+
+#include "Audio.h"
 
 static std::ofstream LOGA("audio.log", std::ios_base::out | std::ios_base::trunc);
 
@@ -37,11 +48,11 @@ static void SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
     for (int i = 1, j = 0; i <= sampleCount; ++i, j += sampleSize)
     {
         float sample = *reinterpret_cast<float*>(pData + j);
-        sampleSum += static_cast<uint16_t>( min(1.0, abs(sample)) * UINT16_MAX );
+        sampleSum += static_cast<uint16_t>( std::min(1.0f, abs(sample)) * UINT16_MAX );
         if (i % samplesPerSegment == 0) {
             timeslot.push_back(static_cast<uint16_t>( sampleSum / samplesPerSegment ));
             sampleSum = 0;
-            topSample = max(topSample, timeslot.back());
+            topSample = std::max(topSample, timeslot.back());
 			LOGA << "Sample " << timeslot.size() << " average: " << timeslot.back() << std::endl;
 		}
     }
@@ -66,7 +77,7 @@ static void SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
     LOGA << "Encode " << dataSize << " bytes to MP3\n";
 
     for (size_t pos = 0; pos < dataSize; pos += readv) {
-        readv = min(I3E_SIZE, static_cast<int>( dataSize - pos ));
+        readv = std::min(I3E_SIZE, static_cast<int>( dataSize - pos ));
         if (readv > 0) {
             writev = lame_encode_buffer_interleaved_ieee_float(lame,
                 reinterpret_cast<float*>(pData + pos), readv >> 3, mp3_buffer, MP3_SIZE);

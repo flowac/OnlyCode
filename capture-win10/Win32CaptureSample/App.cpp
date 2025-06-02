@@ -1,9 +1,12 @@
 #include "pch.h"
-#include "App.h"
-#include "CaptureSnapshot.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+
+#include "App.h"
+#include "CaptureSnapshot.h"
+#include "Image.h"
+#include "Web.h"
 
 #pragma comment(lib, "windowscodecs.lib")
 static std::ofstream LOGA("app.log", std::ios_base::out | std::ios_base::trunc);
@@ -16,7 +19,7 @@ namespace winrt
     using namespace Windows::Graphics::DirectX;
     using namespace Windows::Graphics::Imaging;
     using namespace Windows::Storage;
-    using namespace Windows::Storage::Pickers;
+    using namespace Windows::Storage::Streams;
     using namespace Windows::System;
     using namespace Windows::UI;
     using namespace Windows::UI::Composition;
@@ -92,62 +95,11 @@ winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAs
         co_await wil::resume_foreground(m_mainThread);
         StartCaptureFromItem(item);
 
+        TakeSnapshotAsync();
         m_timer.Start();
     }
 
     co_return item;
-}
-
-std::vector<uint8_t> DownscalePixels(std::vector<uint8_t> srcPixels, uint32_t srcWidth, uint32_t srcHeight, float scale)
-{
-    uint32_t dstWidth = srcWidth / scale;
-    uint32_t dstHeight = srcHeight / scale;
-    std::vector<uint8_t> dstPixels(dstWidth * dstHeight * 4);
-
-    if (scale <= 1) {
-        LOGA << "No downscaling needed, returning original pixels\n";
-        return srcPixels;
-    }
-    LOGA << "Downscaling to " << dstWidth << "x" << dstHeight << " aka factor of " << scale << std::endl;
-
-    for (uint32_t y = 0; y < dstHeight; ++y) {
-        uint32_t srcY = y * scale;
-        for (uint32_t x = 0; x < dstWidth; ++x) {
-            uint32_t srcX = x * scale;
-            memcpy(&dstPixels[(y * dstWidth + x) * 4], &srcPixels[(srcY * srcWidth + srcX) * 4], 4);
-        }
-    }
-    return dstPixels;
-}
-
-HRESULT SaveGray8AsPng(const std::vector<uint8_t>& grayData, UINT width, UINT height, LPCWSTR outputFilePath)
-{
-    HRESULT hr = S_OK;
-    IWICImagingFactory* pFactory = nullptr;
-    IWICBitmapEncoder* pEncoder = nullptr;
-    IWICBitmapFrameEncode* pFrame = nullptr;
-    IWICStream* pStream = nullptr;
-    WICPixelFormatGUID format = GUID_WICPixelFormat8bppGray;
-    UINT stride = width;
-
-    if (SUCCEEDED(hr)) hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFactory));
-    if (SUCCEEDED(hr)) hr = pFactory->CreateStream(&pStream);
-    if (SUCCEEDED(hr)) hr = pStream->InitializeFromFilename(outputFilePath, GENERIC_WRITE);
-    if (SUCCEEDED(hr)) hr = pFactory->CreateEncoder(GUID_ContainerFormatPng, nullptr, &pEncoder);
-    if (SUCCEEDED(hr)) hr = pEncoder->Initialize(pStream, WICBitmapEncoderNoCache);
-    if (SUCCEEDED(hr)) hr = pEncoder->CreateNewFrame(&pFrame, nullptr);
-    if (SUCCEEDED(hr)) hr = pFrame->Initialize(nullptr);  // Default options
-    if (SUCCEEDED(hr)) hr = pFrame->SetSize(width, height);
-    if (SUCCEEDED(hr)) hr = pFrame->SetPixelFormat(&format);
-    if (SUCCEEDED(hr)) hr = pFrame->WritePixels(height, stride, stride * height, const_cast<BYTE*>(grayData.data()));
-    if (SUCCEEDED(hr)) hr = pFrame->Commit();
-    if (SUCCEEDED(hr)) hr = pEncoder->Commit();
-
-    if (pFrame) pFrame->Release();
-    if (pEncoder) pEncoder->Release();
-    if (pStream) pStream->Release();
-    if (pFactory) pFactory->Release();
-    return hr;
 }
 
 winrt::IAsyncOperation<bool> App::TakeSnapshotAsync()
@@ -201,6 +153,8 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync()
         }
     }
 
+    winrt::hstring result = co_await SendHttpPost(fname, L"http://18.116.80.5:7003");
+    LOGA << winrt::to_string(result).c_str() << std::endl;
     co_return true;
 }
 

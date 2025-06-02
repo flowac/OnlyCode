@@ -5,7 +5,6 @@
 namespace winrt
 {
     using namespace Windows::Graphics::Capture;
-    using namespace Windows::Storage::Pickers;
     using namespace Windows::UI::Composition;
 }
 

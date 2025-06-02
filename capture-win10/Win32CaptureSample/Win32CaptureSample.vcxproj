@@ -147,19 +147,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="audio.cpp" />
+    <ClCompile Include="Audio.cpp" />
     <ClCompile Include="CaptureSnapshot.cpp" />
+    <ClCompile Include="Image.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SampleWindow.cpp" />
     <ClCompile Include="SimpleCapture.cpp" />
+    <ClCompile Include="Web.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="audio.h" />
+    <ClInclude Include="Audio.h" />
     <ClInclude Include="CaptureSnapshot.h" />
+    <ClInclude Include="Image.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SampleWindow.h" />
     <ClInclude Include="SimpleCapture.h" />
+    <ClInclude Include="Web.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

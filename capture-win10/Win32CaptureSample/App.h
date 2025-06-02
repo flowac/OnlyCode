@@ -1,6 +1,6 @@
 #pragma once
 #include "SimpleCapture.h"
-#include "audio.h"
+#include "Audio.h"
 
 class App
 {

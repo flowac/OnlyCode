@@ -19,6 +19,8 @@ class pose:
 
     def _run(self, fname):
         image = mp.Image.create_from_file(fname)
+        if image.channels < 3:
+            return None
         detection_result = self.detector.detect(image)
 
         ret = {}

@@ -9,7 +9,7 @@
 #include "Web.h"
 
 #pragma comment(lib, "windowscodecs.lib")
-static std::ofstream LOGA("app.log", std::ios_base::out | std::ios_base::trunc);
+std::ofstream LOGA("app.log", std::ios_base::out | std::ios_base::trunc);
 
 namespace winrt
 {
@@ -121,8 +121,8 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
             co_return false;
         }
 
-        auto result = co_await SendHttpPost(fname, L"http://18.116.80.5:7003");
-        LOGA << "Result count: " << winrt::to_string(result).c_str() << std::endl;
+        m_countData = co_await SendHttpPost(fname, L"http://18.116.80.5:7003");
+        LOGA << "Result count: " << winrt::to_string(m_countData).c_str() << std::endl;
         break;
     }
     case CaptureIndex::POSE:
@@ -147,15 +147,17 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         encoder.SetPixelData(bitmapPixelFormat, winrt::BitmapAlphaMode::Ignore, width, height, 1.0, 1.0, bytes);
         co_await encoder.FlushAsync();
 
-        auto result = co_await SendHttpPost(fname, L"http://18.116.80.5:7002");
-        LOGA << "Result pose: " << winrt::to_string(result).c_str() << std::endl;
+        m_poseData = co_await SendHttpPost(fname, L"http://18.116.80.5:7002");
+        LOGA << "Result pose: " << winrt::to_string(m_poseData).c_str() << std::endl;
         break;
     }
     default:
-        LOGA << "Unknown capture index: " << static_cast<int>(idx) << std::endl;
+        LOGA << "Unknown capture index: " << idx << std::endl;
 		co_return false;
     }
 
+    auto comb = L"Word count: " + m_countData + L"\r\nPose: " + m_poseData;
+    SetWindowText(m_result, comb.c_str());
     co_return true;
 }
 
@@ -190,4 +192,9 @@ void App::StopCapture(CaptureIndex idx)
 void App::InitializeWithWindow(HWND window)
 {
     m_mainWindow = window;
+}
+
+void App::SetResultPtr(HWND hwnd)
+{
+    m_result = hwnd;
 }

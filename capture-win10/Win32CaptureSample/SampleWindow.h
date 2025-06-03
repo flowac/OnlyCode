@@ -27,6 +27,8 @@ private:
     HWND m_poseButton = nullptr;
     HWND m_countButton = nullptr;
     HWND m_stopButton = nullptr;
+    HWND m_label = nullptr;
+    HWND m_result = nullptr;
     std::shared_ptr<App> m_app;
     winrt::Windows::Graphics::Capture::GraphicsCaptureItem::Closed_revoker m_itemClosedRevoker[CaptureIndex::CAPTURE_LEN];
 };

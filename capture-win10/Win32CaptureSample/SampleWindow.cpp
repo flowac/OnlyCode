@@ -2,6 +2,8 @@
 #include "App.h"
 #include "SampleWindow.h"
 
+extern std::ofstream LOGA;
+
 namespace winrt
 {
     using namespace Windows::Foundation;
@@ -46,8 +48,9 @@ SampleWindow::SampleWindow(int width, int height, std::shared_ptr<App> app)
 
     std::call_once(SampleWindowClassRegistration, []() { RegisterWindowClass(); });
 
-    auto exStyle = WS_EX_LAYERED;
-    auto style = WS_OVERLAPPEDWINDOW;
+    // Inactivative options would be useful for the next project
+    auto exStyle = WS_EX_TOPMOST | WS_EX_LAYERED;// | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE;
+    auto style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;// | WS_THICKFRAME;// WS_OVERLAPPEDWINDOW;
 
     RECT rect = { 0, 0, width, height };
     winrt::check_bool(AdjustWindowRectEx(&rect, style, false, exStyle));
@@ -57,16 +60,16 @@ SampleWindow::SampleWindow(int width, int height, std::shared_ptr<App> app)
     winrt::check_bool(CreateWindowExW(exStyle, ClassName.c_str(), L"Cap", style,
         CW_USEDEFAULT, CW_USEDEFAULT, adjustedWidth, adjustedHeight, nullptr, nullptr, instance, this));
     WINRT_ASSERT(m_window);
-
     SetLayeredWindowAttributes(m_window, RGB(200, 200, 200), 200, LWA_ALPHA);
-
-    auto isAllDisplaysPresent = winrt::ApiInformation::IsApiContractPresent(WindowsUniversalContract, 9);
 
     m_app = app;
     m_app->InitializeWithWindow(m_window);
-
     CreateControls(instance);
-    winrt::check_bool(SetWindowDisplayAffinity(m_window, WDA_EXCLUDEFROMCAPTURE));
+    m_app->SetResultPtr(m_result);
+
+    if (bool secure = SetWindowDisplayAffinity(m_window, WDA_EXCLUDEFROMCAPTURE); // Prevents the window from being captured
+    secure) LOGA << "Session secured: Successfully configured WDA_EXCLUDEFROMCAPTURE\n";
+    else    LOGA << "Session NOT secure: SetWindowDisplayAffinity failed with error: " << GetLastError() << std::endl;
 
     ShowWindow(m_window, SW_SHOW);
     UpdateWindow(m_window);
@@ -139,7 +142,6 @@ winrt::fire_and_forget SampleWindow::OnPickerButtonClicked(CaptureIndex idx)
 // Not DPI aware but could be by multiplying the constants based on the monitor scale factor
 void SampleWindow::CreateControls(HINSTANCE instance)
 {
-    // Programmatic capture
     auto isWin32ProgrammaticPresent = winrt::ApiInformation::IsApiContractPresent(WindowsUniversalContract, 8);
     auto win32ProgrammaticStyle = isWin32ProgrammaticPresent ? 0 : WS_DISABLED;
 
@@ -147,6 +149,9 @@ void SampleWindow::CreateControls(HINSTANCE instance)
     m_poseButton = controls.CreateControl(util::ControlType::Button, L"Face detection / Pose Picker");
     m_countButton = controls.CreateControl(util::ControlType::Button, L"Code detection / Count Picker");
     m_stopButton = controls.CreateControl(util::ControlType::Button, L"Stop Capture", WS_DISABLED);
+	m_label = controls.CreateControl(util::ControlType::Label, L"Evaluation");
+	m_result = controls.CreateControl(util::ControlType::Edit, L"Results", ES_MULTILINE | ES_READONLY);
+    SetWindowPos(m_result, nullptr, 0, 0, 200, 140, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 void SampleWindow::SetSubTitle()

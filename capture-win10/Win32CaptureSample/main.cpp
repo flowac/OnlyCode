@@ -33,7 +33,7 @@ static int __stdcall WinMain(HINSTANCE, HINSTANCE, PSTR, int)
     root.Offset({ 220.0f, 0.0f, 0.0f });
 
     auto app = std::make_shared<App>(root);
-    auto window = SampleWindow(300, 300, app);
+    auto window = SampleWindow(220, 300, app);
     auto target = window.CreateWindowTarget(compositor);
     target.Root(root);
     SetWindowPos(window.m_window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);

@@ -16,14 +16,17 @@ struct SampleWindow : robmikh::common::desktop::DesktopWindow<SampleWindow>
 private:
     static void RegisterWindowClass();
     void CreateControls(HINSTANCE instance);
-    void SetSubTitle(std::wstring const& text);
-    winrt::fire_and_forget OnPickerButtonClicked();
-    void StopCapture();
-    void OnCaptureItemClosed(winrt::Windows::Graphics::Capture::GraphicsCaptureItem const&, winrt::Windows::Foundation::IInspectable const&);
-    void OnCaptureStarted(winrt::Windows::Graphics::Capture::GraphicsCaptureItem const& item);
+    void SetSubTitle();
+    winrt::fire_and_forget OnPickerButtonClicked(CaptureIndex idx);
+    void StopCapture(CaptureIndex idx);
+    void OnCaptureItemClosedPose(winrt::Windows::Graphics::Capture::GraphicsCaptureItem const&, winrt::Windows::Foundation::IInspectable const&);
+    void OnCaptureItemClosedCount(winrt::Windows::Graphics::Capture::GraphicsCaptureItem const&, winrt::Windows::Foundation::IInspectable const&);
+    void OnCaptureStarted(winrt::Windows::Graphics::Capture::GraphicsCaptureItem const& item, CaptureIndex idx);
 
-    HWND m_pickerButton = nullptr;
+    bool m_isCap[CaptureIndex::CAPTURE_LEN]{};
+    HWND m_poseButton = nullptr;
+    HWND m_countButton = nullptr;
     HWND m_stopButton = nullptr;
     std::shared_ptr<App> m_app;
-    winrt::Windows::Graphics::Capture::GraphicsCaptureItem::Closed_revoker m_itemClosedRevoker;
+    winrt::Windows::Graphics::Capture::GraphicsCaptureItem::Closed_revoker m_itemClosedRevoker[CaptureIndex::CAPTURE_LEN];
 };

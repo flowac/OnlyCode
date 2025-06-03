@@ -86,15 +86,18 @@ LRESULT SampleWindow::MessageHandler(UINT const message, WPARAM const wparam, LP
         switch (command)
         {
         case BN_CLICKED:
+            if (hwnd == m_poseButton)
             {
-                if (hwnd == m_pickerButton)
-                {
-                    OnPickerButtonClicked();
-                }
-                else if (hwnd == m_stopButton)
-                {
-                    StopCapture();
-                }
+                OnPickerButtonClicked(CaptureIndex::POSE);
+            }
+            else if (hwnd == m_countButton)
+            {
+                OnPickerButtonClicked(CaptureIndex::COUNT);
+            }
+            else if (hwnd == m_stopButton)
+            {
+                StopCapture(CaptureIndex::POSE);
+                StopCapture(CaptureIndex::COUNT);
             }
             break;
         }
@@ -109,22 +112,28 @@ LRESULT SampleWindow::MessageHandler(UINT const message, WPARAM const wparam, LP
     return 0;
 }
 
-void SampleWindow::OnCaptureStarted(winrt::GraphicsCaptureItem const& item)
+void SampleWindow::OnCaptureStarted(winrt::GraphicsCaptureItem const& item, CaptureIndex idx)
 {
-    m_itemClosedRevoker.revoke();
-    m_itemClosedRevoker = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosed });
-    SetSubTitle(std::wstring(item.DisplayName()));
+    m_itemClosedRevoker[idx].revoke();
+    m_isCap[idx] = true;
+
+    switch (idx)
+    {
+    case CaptureIndex::POSE:
+        m_itemClosedRevoker[idx] = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosedPose });
+        break;
+    case CaptureIndex::COUNT:
+        m_itemClosedRevoker[idx] = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosedCount });
+        break;
+    }
+    SetSubTitle();
     EnableWindow(m_stopButton, true);
 }
 
-winrt::fire_and_forget SampleWindow::OnPickerButtonClicked()
+winrt::fire_and_forget SampleWindow::OnPickerButtonClicked(CaptureIndex idx)
 {
-    auto selectedItem = co_await m_app->StartCaptureWithPickerAsync();
-
-    if (selectedItem)
-    {
-        OnCaptureStarted(selectedItem);
-    }
+    auto selectedItem = co_await m_app->StartCaptureWithPickerAsync(idx);
+    if (selectedItem) OnCaptureStarted(selectedItem, idx);
 }
 
 // Not DPI aware but could be by multiplying the constants based on the monitor scale factor
@@ -135,32 +144,35 @@ void SampleWindow::CreateControls(HINSTANCE instance)
     auto win32ProgrammaticStyle = isWin32ProgrammaticPresent ? 0 : WS_DISABLED;
 
     auto controls = util::StackPanel(m_window, instance, 10, 10, 40, 200, 30);
-
-    // Create picker button
-    m_pickerButton = controls.CreateControl(util::ControlType::Button, L"Open Picker");
-
-    // Create stop capture button
+    m_poseButton = controls.CreateControl(util::ControlType::Button, L"Face detection / Pose Picker");
+    m_countButton = controls.CreateControl(util::ControlType::Button, L"Code detection / Count Picker");
     m_stopButton = controls.CreateControl(util::ControlType::Button, L"Stop Capture", WS_DISABLED);
 }
 
-void SampleWindow::SetSubTitle(std::wstring const& text)
+void SampleWindow::SetSubTitle()
 {
-    std::wstring titleText(L"Cap");
-    if (!text.empty())
+    std::wstring titleText;
+    for (int idx = 0; idx < CaptureIndex::CAPTURE_LEN; ++idx)
     {
-        titleText += (L" - " + text);
-    }
+        titleText.append(CaptureName[idx]);
+        titleText.append(m_isCap[idx] ? L" ON  " : L" OFF  ");
+	}
     SetWindowTextW(m_window, titleText.c_str());
 }
 
-void SampleWindow::StopCapture()
+void SampleWindow::StopCapture(CaptureIndex idx)
 {
-    m_app->StopCapture();
-    SetSubTitle(L"");
-    EnableWindow(m_stopButton, false);
+	m_isCap[idx] = false;
+    m_app->StopCapture(idx);
+    SetSubTitle();
 }
 
-void SampleWindow::OnCaptureItemClosed(winrt::GraphicsCaptureItem const&, winrt::IInspectable const&)
+void SampleWindow::OnCaptureItemClosedPose(winrt::GraphicsCaptureItem const&, winrt::IInspectable const&)
 {
-    StopCapture();
+    StopCapture(CaptureIndex::POSE);
+}
+
+void SampleWindow::OnCaptureItemClosedCount(winrt::GraphicsCaptureItem const&, winrt::IInspectable const&)
+{
+    StopCapture(CaptureIndex::COUNT);
 }

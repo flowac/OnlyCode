@@ -62,13 +62,12 @@ App::App(winrt::ContainerVisual root)
     auto dxgiDevice = d3dDevice.as<IDXGIDevice>();
     m_device = CreateDirect3DDevice(dxgiDevice.get());
 
-    m_timer_pose = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
-    m_timer_pose.Interval(std::chrono::milliseconds{ 3300 });
-    auto token_pose = m_timer_pose.Tick({ this, &App::OnTickPose });
-
-    m_timer_count = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
-    m_timer_count.Interval(std::chrono::milliseconds{ 10000 });
-    auto token_count = m_timer_count.Tick({ this, &App::OnTickCount });
+    m_timer[CaptureIndex::POSE] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
+    m_timer[CaptureIndex::POSE].Interval(std::chrono::milliseconds{ 3300 });
+    auto token_pose = m_timer[CaptureIndex::POSE].Tick({ this, &App::OnTickPose });
+    m_timer[CaptureIndex::COUNT] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
+    m_timer[CaptureIndex::COUNT].Interval(std::chrono::milliseconds{ 10000 });
+    auto token_count = m_timer[CaptureIndex::COUNT].Tick({this, &App::OnTickCount});
 
     audio_ready = m_record.Initialize();
 	assert(audio_ready, L"Audio recording failed to initialize");
@@ -77,18 +76,17 @@ App::App(winrt::ContainerVisual root)
 
 void App::OnTickPose(winrt::IInspectable const& sender, winrt::IInspectable const& event)
 {
-    TakeSnapshotAsync(false);
+    TakeSnapshotAsync(CaptureIndex::POSE);
 }
 
 void App::OnTickCount(winrt::IInspectable const& sender, winrt::IInspectable const& event)
 {
-    TakeSnapshotAsync(true);
+    TakeSnapshotAsync(CaptureIndex::COUNT);
 }
 
-winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAsync()
+winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAsync(CaptureIndex idx)
 {
-    m_timer_pose.Stop();
-    m_timer_count.Stop();
+    m_timer[idx].Stop();
 	if (!pwd) pwd = co_await winrt::StorageFolder::GetFolderFromPathAsync(std::filesystem::current_path().c_str());
 
     auto capturePicker = winrt::GraphicsCapturePicker();
@@ -103,51 +101,53 @@ winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAs
         // Direct3D11CaptureFramePool::CreateFreeThreaded, which doesn't now have this
         // requirement. See the README if you're unsure of which version of 'Create' to use.
         co_await wil::resume_foreground(m_mainThread);
-        StartCaptureFromItem(item);
+        StartCaptureFromItem(item, idx);
 
-        TakeSnapshotAsync(false);
-        TakeSnapshotAsync(true);
-        m_timer_pose.Start();
-        m_timer_count.Start();
+        TakeSnapshotAsync(idx);
+        m_timer[idx].Start();
     }
 
     co_return item;
 }
 
-winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(const bool gray)
+winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
 {
 	static uint16_t frameCount = 0;
     WCHAR fname[12];
-	if (true) swprintf_s(fname, L"%s.png", gray ? L"count" : L"pose");
-    else swprintf_s(fname, L"%s%03d.png", gray ? L"count" : L"pose", ++frameCount);
+	if (true) swprintf_s(fname, L"%s.png", CaptureName[idx]);
+    else swprintf_s(fname, L"%s%03d.png", CaptureName[idx], ++frameCount);
 
-    if (m_capture == nullptr) co_return false;
-    auto item = m_capture->CaptureItem();
+    if (m_capture[idx] == nullptr) co_return false;
+    auto item = m_capture[idx]->CaptureItem();
     auto texture = co_await CaptureSnapshot::TakeAsync(m_device, item, winrt::DirectXPixelFormat::B8G8R8A8UIntNormalized);
     D3D11_TEXTURE2D_DESC desc = {};
     texture->GetDesc(&desc);
     LOGA << "Input is " << desc.Width << "x" << desc.Height << std::endl;
 
-    if (gray) {
+    switch (idx) {
+    case CaptureIndex::COUNT:
+    {
         // Gray scale for Tesseract OCR
         auto bytes = util::CopyBytesFromTexture(texture);
-        std::vector<uint8_t> grayData(desc.Width * desc.Height);
         for (uint32_t i = 0, j = 0; i < bytes.size(); i += 4, j++) {
             uint8_t b = bytes[i];
             uint8_t g = bytes[i + 1];
             uint8_t r = bytes[i + 2];
-            grayData[j] = static_cast<uint8_t>(0.21f * r + 0.72f * g + 0.07f * b);
+            bytes[j] = static_cast<uint8_t>(0.21f * r + 0.72f * g + 0.07f * b);
         }
 
-        HRESULT hr = SaveGray8AsPng(grayData, desc.Width, desc.Height, fname);
+        HRESULT hr = SaveGray8AsPng(bytes, desc.Width, desc.Height, fname);
         if (FAILED(hr)) {
             LOGA << "Failed to save Gray8\n";
             co_return false;
         }
 
-        winrt::hstring result = co_await SendHttpPost(fname, L"http://18.116.80.5:7003");
+        auto result = co_await SendHttpPost(fname, L"http://18.116.80.5:7003");
         LOGA << "Result count: " << winrt::to_string(result).c_str() << std::endl;
-    } else {
+        break;
+    }
+    case CaptureIndex::POSE:
+    {
         // Scaling down for FaceLandmarker
         constexpr uint32_t maxWidth = 800;
         constexpr uint32_t maxHeight = 600;
@@ -168,21 +168,24 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(const bool gray)
         encoder.SetPixelData(bitmapPixelFormat, winrt::BitmapAlphaMode::Ignore, width, height, 1.0, 1.0, bytes);
         co_await encoder.FlushAsync();
 
-        winrt::hstring result = co_await SendHttpPost(fname, L"http://18.116.80.5:7002");
+        auto result = co_await SendHttpPost(fname, L"http://18.116.80.5:7002");
         LOGA << "Result pose: " << winrt::to_string(result).c_str() << std::endl;
+        break;
+    }
+    default:
+        LOGA << "Unknown capture index: " << static_cast<int>(idx) << std::endl;
+		co_return false;
     }
 
     co_return true;
 }
 
-void App::StartCaptureFromItem(winrt::GraphicsCaptureItem item)
+void App::StartCaptureFromItem(winrt::GraphicsCaptureItem item, CaptureIndex idx)
 {
-    m_capture = std::make_unique<SimpleCapture>(m_device, item, m_pixelFormat);
-
-    auto surface = m_capture->CreateSurface(m_compositor);
+    m_capture[idx] = std::make_unique<SimpleCapture>(m_device, item, m_pixelFormat);
+    auto surface = m_capture[idx]->CreateSurface(m_compositor);
     m_brush.Surface(surface);
-
-    m_capture->StartCapture();
+    m_capture[idx]->StartCapture();
 }
 
 void App::InitializeObjectWithWindowHandle(winrt::Windows::Foundation::IUnknown const& object)
@@ -197,14 +200,13 @@ void App::InitializeObjectWithWindowHandle(winrt::Windows::Foundation::IUnknown 
     winrt::check_hresult(initializer->Initialize(m_mainWindow));
 }
 
-void App::StopCapture()
+void App::StopCapture(CaptureIndex idx)
 {
-    m_timer_pose.Stop();
-    m_timer_count.Stop();
-    if (m_capture)
+    m_timer[idx].Stop();
+    if (m_capture[idx])
     {
-        m_capture->Close();
-        m_capture = nullptr;
+        m_capture[idx]->Close();
+        m_capture[idx] = nullptr;
         m_brush.Surface(nullptr);
     }
 }

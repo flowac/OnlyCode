@@ -10,11 +10,13 @@ Go to Issues tab for details
 
 
 ## Setup
+See Docker-Checkout.md for running a pre-configured 11GB docker image  
+
 | Hardware | Recommended |
 | --- | --- |
 | CPU | 1 core |
-| RAM | 2 GB |
-| Disk | 20 GB |
+| RAM | 3 GB |
+| Disk | 30 GB |
 
 | Package | Ubuntu 24.04 or Ubuntu under WSL2 / AWS |
 | --- | --- |

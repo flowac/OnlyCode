@@ -1,18 +1,7 @@
 #pragma once
 
-#include <windows.h>
-#include <mmdeviceapi.h>
-#include <mmeapi.h>
 #include <audioclient.h>
-#include <functiondiscoverykeys.h>
-#include <comdef.h>
-#include <fstream>
-#include <thread>
-#include <chrono>
-#include <mmreg.h> // Include this header to define WAVEFORMATEX
-
-#pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "winmm.lib")
+#include <mmdeviceapi.h>
 
 #define REFTIMES_PER_SEC   10000000
 #define REFTIMES_PER_MILLISEC 10000

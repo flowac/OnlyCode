@@ -6,7 +6,9 @@
     <ClCompile Include="SimpleCapture.cpp" />
     <ClCompile Include="SampleWindow.cpp" />
     <ClCompile Include="CaptureSnapshot.cpp" />
-    <ClCompile Include="audio.cpp" />
+    <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="Web.cpp" />
+    <ClCompile Include="Image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -14,7 +16,9 @@
     <ClInclude Include="SimpleCapture.h" />
     <ClInclude Include="SampleWindow.h" />
     <ClInclude Include="CaptureSnapshot.h" />
-    <ClInclude Include="audio.h" />
+    <ClInclude Include="Audio.h" />
+    <ClInclude Include="Web.h" />
+    <ClInclude Include="Image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

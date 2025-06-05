@@ -1,11 +1,15 @@
+import glob
 import sys
 import time
 import pose
 import json
 
-flist = ["data/image.png", "data/image.jpg", "data/bad.png"]
+flist = glob.glob("data/*.png") + glob.glob("data/*.jpg") + \
+    glob.glob("data/*.jpeg")
+
 if len(sys.argv) > 1:
     flist = sys.argv[1:]
+
 results = []
 po = pose.pose()
 
@@ -27,7 +31,8 @@ for fname in flist:
     results.append(result)
     for name, val in fbs.items():
         if name == 'head_pose_angles':
-            print(f"{name}: yaw={val['yaw']:.2f}, pitch={val['pitch']:.2f}, roll={val['roll']:.2f}")
+            print(
+                f"{name}: yaw={val['yaw']:.2f}, pitch={val['pitch']:.2f}, roll={val['roll']:.2f}")
         else:
             print(f'{name: <20} {val:.4f}')
 

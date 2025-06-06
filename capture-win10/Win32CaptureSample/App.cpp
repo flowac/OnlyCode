@@ -44,9 +44,9 @@ App::App(winrt::ContainerVisual root)
     m_timer[CaptureIndex::POSE] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
     m_timer[CaptureIndex::POSE].Interval(std::chrono::milliseconds{ 3300 });
     auto token_pose = m_timer[CaptureIndex::POSE].Tick({ this, &App::OnTickPose });
-    m_timer[CaptureIndex::COUNT] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
-    m_timer[CaptureIndex::COUNT].Interval(std::chrono::milliseconds{ 10000 });
-    auto token_count = m_timer[CaptureIndex::COUNT].Tick({this, &App::OnTickCount});
+    m_timer[CaptureIndex::CODE] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
+    m_timer[CaptureIndex::CODE].Interval(std::chrono::milliseconds{ 10000 });
+    auto token_count = m_timer[CaptureIndex::CODE].Tick({this, &App::OnTickCount});
 
     audio_ready = m_record.Initialize();
 	assert(audio_ready, L"Audio recording failed to initialize");
@@ -60,7 +60,7 @@ void App::OnTickPose(winrt::IInspectable const& sender, winrt::IInspectable cons
 
 void App::OnTickCount(winrt::IInspectable const& sender, winrt::IInspectable const& event)
 {
-    TakeSnapshotAsync(CaptureIndex::COUNT);
+    TakeSnapshotAsync(CaptureIndex::CODE);
 }
 
 winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAsync(CaptureIndex idx)
@@ -104,7 +104,7 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
     LOGA << "Input is " << desc.Width << "x" << desc.Height << std::endl;
 
     switch (idx) {
-    case CaptureIndex::COUNT:
+    case CaptureIndex::CODE:
     {
         // Gray scale for Tesseract OCR
         auto bytes = util::CopyBytesFromTexture(texture);

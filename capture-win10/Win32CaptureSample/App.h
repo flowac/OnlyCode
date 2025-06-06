@@ -4,12 +4,12 @@
 
 static enum CaptureIndex : size_t {
     POSE,
-    COUNT,
+    CODE,
     CAPTURE_LEN
 };
 WCHAR const* const CaptureName[CaptureIndex::CAPTURE_LEN]{
     L"Pose",
-    L"Count"
+    L"Code"
 };
 
 class App

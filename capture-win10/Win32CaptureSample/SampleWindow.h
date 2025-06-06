@@ -16,7 +16,7 @@ struct SampleWindow : robmikh::common::desktop::DesktopWindow<SampleWindow>
 private:
     static void RegisterWindowClass();
     void CreateControls(HINSTANCE instance);
-    void SetSubTitle();
+    int SetSubTitle();
     winrt::fire_and_forget OnPickerButtonClicked(CaptureIndex idx);
     void StopCapture(CaptureIndex idx);
     void OnCaptureItemClosedPose(winrt::Windows::Graphics::Capture::GraphicsCaptureItem const&, winrt::Windows::Foundation::IInspectable const&);

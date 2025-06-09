@@ -9,5 +9,6 @@ fi
 prefix="${video}_%02d.jpg"
 
 rm -f "${video}*jpg"
-time ffmpeg -i $video -r 0.05 -qscale:v 5 -vf mpdecimate=hi=8000:lo=8000:frac=1 $prefix
+#time ffmpeg -i $video -r 0.1 -qscale:v 5 -vf mpdecimate=hi=8000:lo=8000:frac=1 $prefix
+time ffmpeg -i $video -r 0.1 -qscale:v 5 $prefix
 

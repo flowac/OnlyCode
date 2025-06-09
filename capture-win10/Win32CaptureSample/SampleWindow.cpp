@@ -96,7 +96,7 @@ SampleWindow::SampleWindow(int width, int height, std::shared_ptr<App> app)
     m_app = app;
     m_app->InitializeWithWindow(m_window);
     CreateControls(instance);
-    m_app->SetResultPtr(m_result);
+    m_app->SetResultPtr(m_poseMsg, m_codeMsg, m_voiceMsg);
 
     if (bool secure = SetWindowDisplayAffinity(m_window, WDA_EXCLUDEFROMCAPTURE); // Prevents the window from being captured
     secure) LOGA << "Session secured: Successfully configured WDA_EXCLUDEFROMCAPTURE\n";
@@ -124,7 +124,7 @@ LRESULT SampleWindow::MessageHandler(UINT const message, WPARAM const wparam, LP
             {
                 OnPickerButtonClicked(CaptureIndex::POSE);
             }
-            else if (hwnd == m_countButton)
+            else if (hwnd == m_codeButton)
             {
                 OnPickerButtonClicked(CaptureIndex::CODE);
             }
@@ -202,17 +202,23 @@ void SampleWindow::CreateControls(HINSTANCE instance)
 
     auto controls = util::StackPanel(m_window, instance, 10, 10, 40, 200, 30);
     m_poseButton = controls.CreateControl(util::ControlType::Button, L"Pose Detection");
-    m_countButton = controls.CreateControl(util::ControlType::Button, L"Code Detection");
+    m_codeButton = controls.CreateControl(util::ControlType::Button, L"Code Detection");
     m_stopButton = controls.CreateControl(util::ControlType::Button, L"Stop Capture", WS_DISABLED);
 	m_label = controls.CreateControl(util::ControlType::Label, L"Analysis");
-	m_result = controls.CreateControl(util::ControlType::Edit, L"Ready for capture...", ES_MULTILINE | ES_READONLY);
-    SetWindowPos(m_result, nullptr, 0, 0, 200, 140, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    m_poseMsg  = controls.CreateControl(util::ControlType::Edit, L"Pose  ready for capture...", ES_MULTILINE | ES_READONLY);
+    m_codeMsg  = controls.CreateControl(util::ControlType::Edit, L"Code  ready for capture...", ES_MULTILINE | ES_READONLY);
+    m_voiceMsg = controls.CreateControl(util::ControlType::Edit, L"Voice ready for capture...", ES_MULTILINE | ES_READONLY);
+    SetWindowPos(m_poseMsg,  nullptr, 0, 0, 200, 50, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(m_codeMsg,  nullptr, 0, 0, 200, 50, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(m_voiceMsg, nullptr, 0, 0, 200, 50, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
     SendMessage(m_poseButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
-    SendMessage(m_countButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
+    SendMessage(m_codeButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
     SendMessage(m_stopButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
     SendMessage(m_label, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
-    SendMessage(m_result, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
+    SendMessage(m_poseMsg,  WM_SETFONT, (WPARAM)g_hFontText, TRUE);
+    SendMessage(m_codeMsg,  WM_SETFONT, (WPARAM)g_hFontText, TRUE);
+    SendMessage(m_voiceMsg, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
 }
 
 int SampleWindow::SetSubTitle()

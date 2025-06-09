@@ -3,6 +3,10 @@
 #include "App.h"
 #include "SampleWindow.h"
 
+winrt::hstring VOICE_API = L"http://104.52.63.66:7001";
+winrt::hstring POSE_API  = L"http://104.52.63.66:7002";
+winrt::hstring CODE_API  = L"http://104.52.63.66:7003";
+
 namespace winrt
 {
     using namespace Windows::Graphics::Capture;

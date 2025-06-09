@@ -25,10 +25,12 @@ private:
 
     bool m_isCap[CaptureIndex::CAPTURE_LEN]{};
     HWND m_poseButton = nullptr;
-    HWND m_countButton = nullptr;
+    HWND m_codeButton = nullptr;
     HWND m_stopButton = nullptr;
     HWND m_label = nullptr;
-    HWND m_result = nullptr;
+    HWND m_poseMsg = nullptr;
+    HWND m_codeMsg = nullptr;
+    HWND m_voiceMsg = nullptr;
     std::shared_ptr<App> m_app;
     winrt::Windows::Graphics::Capture::GraphicsCaptureItem::Closed_revoker m_itemClosedRevoker[CaptureIndex::CAPTURE_LEN];
 };

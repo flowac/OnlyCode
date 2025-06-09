@@ -20,7 +20,7 @@ public:
     winrt::Windows::Foundation::IAsyncOperation<bool> TakeSnapshotAsync(CaptureIndex idx);
     void StopCapture(CaptureIndex idx);
     void InitializeWithWindow(HWND window);
-	void SetResultPtr(HWND hwnd);
+	void SetResultPtr(HWND pose, HWND code, HWND voice);
 
 private:
     void StartCaptureFromItem(winrt::Windows::Graphics::Capture::GraphicsCaptureItem item, CaptureIndex idx);
@@ -31,12 +31,12 @@ private:
     winrt::Windows::System::DispatcherQueue m_mainThread{ nullptr };
 
     HWND m_mainWindow{ nullptr };
-    HWND m_result{ nullptr };
+    HWND m_pose { nullptr };
+    HWND m_code { nullptr };
+    HWND m_voice{ nullptr };
     winrt::Windows::Storage::StorageFolder pwd{ nullptr };
     AudioCapture m_record;
     bool audio_ready{ false };
-    winrt::hstring m_poseData;
-    winrt::hstring m_countData;
 
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice m_device{ nullptr };
     std::unique_ptr<SimpleCapture>             m_capture[CaptureIndex::CAPTURE_LEN]{ 0,0 };

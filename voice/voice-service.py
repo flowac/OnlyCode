@@ -8,7 +8,7 @@ valid_ext = {"mp3", "wav"}
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = upload_dir
-app.config["MAX_CONTENT_LENGTH"] = 2 * 1000 * 1000
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1000 * 1000
 port = 7001
 os.makedirs(upload_dir, exist_ok=True)
 vc = voice.voice()

@@ -47,6 +47,10 @@ App::App(winrt::ContainerVisual root)
     m_timer[CaptureIndex::CODE] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
     m_timer[CaptureIndex::CODE].Interval(std::chrono::milliseconds{ 10000 });
     auto token_count = m_timer[CaptureIndex::CODE].Tick({this, &App::OnTickCount});
+
+	LOGA << "Voice API: " << winrt::to_string(VOICE_API) << std::endl;
+	LOGA << "Pose API:  " << winrt::to_string(POSE_API)  << std::endl;
+	LOGA << "Code API:  " << winrt::to_string(CODE_API)  << std::endl;
 }
 
 void App::OnTickPose(winrt::IInspectable const& sender, winrt::IInspectable const& event)

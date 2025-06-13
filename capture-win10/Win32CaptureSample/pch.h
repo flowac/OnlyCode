@@ -1,6 +1,4 @@
 #pragma once
-
-// Collision from minwindef min/max and std
 #define NOMINMAX 
 
 // Windows SDK support
@@ -67,3 +65,8 @@
 #include <robmikh.common/stream.interop.h>
 #include <robmikh.common/hwnd.interop.h>
 #include <robmikh.common/ControlsHelper.h>
+
+// Value set in main.cpp
+extern winrt::hstring VOICE_API;
+extern winrt::hstring POSE_API;
+extern winrt::hstring CODE_API;

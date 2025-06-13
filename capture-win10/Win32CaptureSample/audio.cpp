@@ -10,12 +10,12 @@
 #pragma comment(lib, "winmm.lib")
 
 #include <lame.h>
-
 #include "Audio.h"
+#include "Web.h"
 
 static std::ofstream LOGA("audio.log", std::ios_base::out | std::ios_base::trunc);
 
-static void SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
+winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
 {
     static bool logOnce{ true };
     if (logOnce) {
@@ -63,8 +63,14 @@ static void SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
          << " seconds effective, threshold " << silenceThreshold
          << " max " << topSample << std::endl;
 
-    std::ofstream mp3("output.mp3", std::ios::binary | std::ios_base::out | std::ios_base::trunc);
-    if (!mp3.is_open()) throw std::runtime_error("Could not open mp3 output file");
+    WCHAR fname[12];
+    swprintf_s(fname, L"output.mp3");
+    std::ofstream mp3(fname, std::ios::binary | std::ios_base::out | std::ios_base::trunc);
+    if (!mp3.is_open()) {
+        LOGA << "Could not open mp3 output file, aborting save";
+        co_return false;
+    }
+
     int readv, writev;
     const int I3E_SIZE = 8192 * 4;
     const int MP3_SIZE = 8192;
@@ -89,10 +95,18 @@ static void SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
 
     lame_close(lame);
     mp3.close();
+
+    LOGA << "Sending speech to " << winrt::to_string(VOICE_API) << std::endl;
+    auto voiceStr = co_await SendHttpPost(fname, VOICE_API);
+	LOGA << "Speech summary: " << winrt::to_string(voiceStr) << std::endl;
+    SetWindowText(m_voice, voiceStr.c_str());
+    co_return true;
 }
 
-bool AudioCapture::Initialize()
+bool AudioCapture::Initialize(HWND voice)
 {
+    m_voice = voice;
+
     HRESULT hr;
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) return false;

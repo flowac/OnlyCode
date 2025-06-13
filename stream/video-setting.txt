@@ -1,0 +1,9 @@
+yt-dlp.exe https://link --merge-output-format mp4
+
+handbrake:
+fast 1080p 30 preset
+gray scale
+5 fps constant rate
+encoder placebo 5.0
+quality RF 40
+audio MP3 32 kbps stereo

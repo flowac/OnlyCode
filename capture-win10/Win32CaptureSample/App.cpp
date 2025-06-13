@@ -44,13 +44,13 @@ App::App(winrt::ContainerVisual root)
     m_timer[CaptureIndex::POSE] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
     m_timer[CaptureIndex::POSE].Interval(std::chrono::milliseconds{ 3300 });
     auto token_pose = m_timer[CaptureIndex::POSE].Tick({ this, &App::OnTickPose });
-    m_timer[CaptureIndex::COUNT] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
-    m_timer[CaptureIndex::COUNT].Interval(std::chrono::milliseconds{ 10000 });
-    auto token_count = m_timer[CaptureIndex::COUNT].Tick({this, &App::OnTickCount});
+    m_timer[CaptureIndex::CODE] = winrt::DispatcherQueue::GetForCurrentThread().CreateTimer();
+    m_timer[CaptureIndex::CODE].Interval(std::chrono::milliseconds{ 10000 });
+    auto token_count = m_timer[CaptureIndex::CODE].Tick({this, &App::OnTickCount});
 
-    audio_ready = m_record.Initialize();
-	assert(audio_ready, L"Audio recording failed to initialize");
-    if (audio_ready) m_record.Start();
+	LOGA << "Voice API: " << winrt::to_string(VOICE_API) << std::endl;
+	LOGA << "Pose API:  " << winrt::to_string(POSE_API)  << std::endl;
+	LOGA << "Code API:  " << winrt::to_string(CODE_API)  << std::endl;
 }
 
 void App::OnTickPose(winrt::IInspectable const& sender, winrt::IInspectable const& event)
@@ -60,7 +60,7 @@ void App::OnTickPose(winrt::IInspectable const& sender, winrt::IInspectable cons
 
 void App::OnTickCount(winrt::IInspectable const& sender, winrt::IInspectable const& event)
 {
-    TakeSnapshotAsync(CaptureIndex::COUNT);
+    TakeSnapshotAsync(CaptureIndex::CODE);
 }
 
 winrt::IAsyncOperation<winrt::GraphicsCaptureItem> App::StartCaptureWithPickerAsync(CaptureIndex idx)
@@ -104,7 +104,7 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
     LOGA << "Input is " << desc.Width << "x" << desc.Height << std::endl;
 
     switch (idx) {
-    case CaptureIndex::COUNT:
+    case CaptureIndex::CODE:
     {
         // Gray scale for Tesseract OCR
         auto bytes = util::CopyBytesFromTexture(texture);
@@ -121,8 +121,10 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
             co_return false;
         }
 
-        m_countData = co_await SendHttpPost(fname, L"http://18.116.80.5:7003");
-        LOGA << "Result count: " << winrt::to_string(m_countData).c_str() << std::endl;
+        LOGA << "Sending words to " << winrt::to_string(CODE_API) << std::endl;
+        auto codeStr = co_await SendHttpPost(fname, CODE_API);
+        LOGA << "Word count: " << winrt::to_string(codeStr) << std::endl;
+        SetWindowText(m_code, codeStr.c_str());
         break;
     }
     case CaptureIndex::POSE:
@@ -147,8 +149,10 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         encoder.SetPixelData(bitmapPixelFormat, winrt::BitmapAlphaMode::Ignore, width, height, 1.0, 1.0, bytes);
         co_await encoder.FlushAsync();
 
-        m_poseData = co_await SendHttpPost(fname, L"http://18.116.80.5:7002");
-        LOGA << "Result pose: " << winrt::to_string(m_poseData).c_str() << std::endl;
+        LOGA << "Sending pose to " << winrt::to_string(POSE_API) << std::endl;
+        auto poseStr = co_await SendHttpPost(fname, POSE_API);
+        LOGA << "Detected pose: " << winrt::to_string(poseStr) << std::endl;
+        SetWindowText(m_pose, poseStr.c_str());
         break;
     }
     default:
@@ -156,8 +160,6 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
 		co_return false;
     }
 
-    auto comb = L"Word count: " + m_countData + L"\r\nPose: " + m_poseData;
-    SetWindowText(m_result, comb.c_str());
     co_return true;
 }
 
@@ -194,7 +196,13 @@ void App::InitializeWithWindow(HWND window)
     m_mainWindow = window;
 }
 
-void App::SetResultPtr(HWND hwnd)
+void App::SetResultPtr(HWND pose, HWND code, HWND voice)
 {
-    m_result = hwnd;
+    m_pose  = pose;
+    m_code  = code;
+    m_voice = voice;
+
+    audio_ready = m_record.Initialize(m_voice);
+    if (audio_ready) m_record.Start();
+    else LOGA << "Audio recording failed to initialize";
 }

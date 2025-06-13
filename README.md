@@ -2,11 +2,17 @@
 Go to Issues tab for details
 
 ## Quick Checks
-| Dir | Command |
+| Dir | Command (Alan's Web Services) |
+| --- | --- |
+| head-poses | curl -X POST -F file=@head-poses/data/image.jpg 104.52.63.66:7002 |
+| image | curl -X POST -F file=@image/data/test1.png 104.52.63.66:7003 |
+| voice | curl -X POST -F file=@voice/data/terry.mp3 104.52.63.66:7001 |
+
+| Dir | Command (Amazon Web Services) |
 | --- | --- |
 | head-poses | curl -X POST -F file=@head-poses/data/image.jpg 18.116.80.5:7002 |
 | image | curl -X POST -F file=@image/data/test1.png 18.116.80.5:7003 |
-| voice | Not hosted on AWS due to 1 GB RAM limit on free instance |
+| voice | Not hosted due to 1 GB RAM limit on free instance |
 
 
 ## Setup

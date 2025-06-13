@@ -68,3 +68,5 @@ Keywords:
    | `0` | Head is **upright** |
    | Positive (`+`) | Tilted toward the **right shoulder** |
    | Negative (`–`) | Tilted toward the **left shoulder** |
+
+Leverage the nlohmann c++ library to find if either of these categories exist / get their values

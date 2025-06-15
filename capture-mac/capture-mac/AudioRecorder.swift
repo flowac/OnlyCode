@@ -23,7 +23,7 @@ class AudioRecorder: NSObject {
     let outputURL = FileManager.default.temporaryDirectory
         .appendingPathComponent("output.wav")
 
-    func startRecording() {
+    func startRecording() -> Bool {
         let devices = AVCaptureDevice.devices(for: .audio)
         for device in devices {
             print("Device: \(device.localizedName)")
@@ -33,7 +33,7 @@ class AudioRecorder: NSObject {
             $0.localizedName.contains("BlackHole")
         }) else {
             print("❌ BlackHole input device not found.")
-            return
+            return false
         }
 
         do {
@@ -43,13 +43,13 @@ class AudioRecorder: NSObject {
                 session.addInput(audioInput)
             } else {
                 print("❌ Can't add audio input")
-                return
+                return false
             }
 
             session.commitConfiguration()
         } catch {
             print("❌ Failed to create input: \(error)")
-            return
+            return false
         }
 
         let inputNode = engine.inputNode
@@ -61,7 +61,7 @@ class AudioRecorder: NSObject {
             audioFileOutput = try AVAudioFile(forWriting: outputURL, settings: format.settings)
         } catch {
             print("❌ Could not create output file: \(error)")
-            return
+            return false
         }
 
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
@@ -81,7 +81,10 @@ class AudioRecorder: NSObject {
             }
         } catch {
             print("❌ Error starting engine: \(error)")
+            return false
         }
+        
+        return true
     }
 
     func stopRecording() {
@@ -93,10 +96,16 @@ class AudioRecorder: NSObject {
     }
 }
 
-func startAud() {
+func startAud(completion: @escaping (String) -> Void) {
     startTimer = Timer.scheduledTimer(withTimeInterval: audioRestart, repeats: true) { _ in
         let rec = AudioRecorder()
-        rec.startRecording()
+        var status = "Failed to record audio"
+        if rec.startRecording() {
+            status = "Recording"
+            completion(status)
+        } else {
+            completion(status)
+        }
     }
     startTimer?.fire()
 }

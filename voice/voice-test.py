@@ -9,6 +9,7 @@ if len(sys.argv) > 1:
     flist = sys.argv[1:]
 
 vc = voice.voice()
+total_start = time.time()
 
 for fname in flist:
     start_time = time.time()
@@ -16,4 +17,7 @@ for fname in flist:
     stop_time = time.time()
     print(f'{(stop_time - start_time) * 1000} ms')
     print(f'Result: density = {density}, impact = {impact}')
+
+total_time = time.time() - total_start
+print(f'\nTests took {total_time * 1000} ms overall')
 

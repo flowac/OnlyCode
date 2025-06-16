@@ -12,6 +12,7 @@ if len(sys.argv) > 1:
 
 results = []
 po = pose.pose()
+total_start = time.time()
 
 for fname in flist:
     start_time = time.time()
@@ -38,3 +39,7 @@ for fname in flist:
 
     with open('results.json', 'w') as f:
         json.dump(results, f, indent=4)
+
+total_time = time.time() - total_start
+print(f'\nTests took {total_time * 1000} ms overall')
+

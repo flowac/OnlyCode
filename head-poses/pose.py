@@ -60,9 +60,9 @@ class pose:
         singular = sy < 1e-6
 
         if not singular:
-            yaw = math.atan2(R[1, 0], R[1, 1])
+            yaw = math.atan2(R[0, 2], R[2, 2])
             pitch = math.atan2(-R[1, 2], sy)
-            roll = math.atan2(R[0, 2], R[2, 2])
+            roll = math.atan2(R[1, 0], R[1, 1])
         else:
             yaw = math.atan2(-R[2, 1], R[2, 2])
             pitch = math.atan2(-R[1, 2], sy)

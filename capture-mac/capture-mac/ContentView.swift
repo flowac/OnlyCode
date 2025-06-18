@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var codeStatus: String = "Idle"
     @State private var poseStatus: String = "Idle"
     @State var audio = AudioRecorder()
+    @State private var floatingManager = FloatingWindowManager()
     
     var body: some View {
         VStack(spacing: 20) {
@@ -44,7 +45,11 @@ struct ContentView: View {
             
             // Control buttons
             HStack(spacing: 15) {
-                Button("Start Code Capture") {
+                Button("Window Picker") {
+                    floatingManager.showFloatingPicker()
+                }
+                
+                Button("Start Capture") {
                     print("Starting capture")
                     status = "Starting..."
                     audioStatus = "Starting..."
@@ -54,6 +59,11 @@ struct ContentView: View {
                     startAud() { ret in
                         audioStatus = ret
                     }
+                    
+                    let codeWindow = floatingManager.getCodeWindow()
+                    let poseWindow = floatingManager.getPoseWindow()
+                    codeStatus = codeWindow != nil ? "Active" : "Idle"
+                    poseStatus = poseWindow != nil ? "Active" : "Idle"
                     startCap()
                     
                     // Update status after operations

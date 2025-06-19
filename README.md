@@ -1,6 +1,3 @@
-## Tasks
-Go to Issues tab for details
-
 ## Quick Checks
 | Dir | Command (Alan's Web Services) |
 | --- | --- |
@@ -23,13 +20,6 @@ See Docker-Checkout.md for running a pre-configured 11GB docker image
 | core | sudo apt install ffmpeg python3-pip tesseract-ocr |
 | base | pip3 install mediapipe tf-keras transformers torch openai-whisper pytesseract |
 | server | pip3 install flask waitress |
-| extra | pip3 install datasets flax hf_xet matplotlib keras-ocr pandas scikit-learn |
-
-### WSL Windows 10 X11 Forwarding
-| Setup | This is optional |
-| --- | --- |
-| Win10 | Start VcXsrv, allow firewall, multi window, no client, no native opengl, yes disable access control |
-| WSL | export GALLIUM_DRIVER=d3d12 ; sudo apt install xdg-utils mesa-utils ; glxinfo -B |
 
 
 ## Reference Docs

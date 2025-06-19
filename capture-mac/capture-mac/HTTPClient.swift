@@ -29,7 +29,7 @@ func httpPost(url: String, fileName: String, completion: @escaping (String?) -> 
     }
     
     guard let imageData = NSData(contentsOfFile: fileName) as Data? else {
-        print("Could not load image from path")
+        print("Could not load file from path")
         return
     }
     

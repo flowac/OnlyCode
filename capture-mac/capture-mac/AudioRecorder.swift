@@ -12,7 +12,7 @@ import AVFoundation
 
 var stopTimer: Timer?
 var startTimer: Timer?
-var timeLimit = 20.0
+var timeLimit = 60.0
 var audioRuntime: TimeInterval = timeLimit
 var audioRestart: TimeInterval = timeLimit + 1.0
 
@@ -20,8 +20,10 @@ class AudioRecorder: NSObject {
     private let session = AVCaptureSession()
     private var audioFileOutput: AVAudioFile?
     private var engine = AVAudioEngine()
-    let outputURL = FileManager.default.temporaryDirectory
+    let wavoutURL = FileManager.default.temporaryDirectory
         .appendingPathComponent("output.wav")
+    let mp3outURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent("output.mp3")
 
     func startRecording() -> Bool {
         let devices = AVCaptureDevice.devices(for: .audio)
@@ -58,7 +60,7 @@ class AudioRecorder: NSObject {
         print(format)
 
         do {
-            audioFileOutput = try AVAudioFile(forWriting: outputURL, settings: format.settings)
+            audioFileOutput = try AVAudioFile(forWriting: wavoutURL, settings: format.settings)
         } catch {
             print("❌ Could not create output file: \(error)")
             return false
@@ -92,9 +94,16 @@ class AudioRecorder: NSObject {
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         audioFileOutput = nil
-        print("Recording stopped. Saved to: \(outputURL.path)")
+        print("Recording stopped. Saved to: \(wavoutURL.path)")
         
-        httpPost(url: voiceURL, fileName: outputURL.path) { result in
+        do {
+            try convertWavToMp3(inputWavURL: wavoutURL, outputMp3URL: mp3outURL)
+            print("Converted to \(mp3outURL.path)")
+        } catch {
+            print("❌ Error: \(error)")
+        }
+        
+        httpPost(url: voiceURL, fileName: mp3outURL.path) { result in
             if result != nil {
                 MessageManager.shared.audio(result!)
             }
@@ -149,4 +158,49 @@ func encodeToMP3(pcmBuffer: UnsafePointer<Int16>, sampleRate: Int, numSamples: I
     } else {
         return nil
     }
+}
+
+func convertWavToMp3(inputWavURL: URL, outputMp3URL: URL) throws {
+    let inputFile = try AVAudioFile(forReading: inputWavURL)
+    let inputFormat = inputFile.processingFormat
+
+    // Define 16-bit mono PCM format
+    guard let targetFormat = AVAudioFormat(commonFormat: .pcmFormatInt16,
+                                           sampleRate: inputFormat.sampleRate,
+                                           channels: 1,
+                                           interleaved: true) else {
+        throw NSError(domain: "WAVError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create target format"])
+    }
+
+    let converter = AVAudioConverter(from: inputFormat, to: targetFormat)!
+    let frameCapacity = AVAudioFrameCount(inputFile.length)
+    let inputBuffer = AVAudioPCMBuffer(pcmFormat: inputFormat, frameCapacity: frameCapacity)!
+    try inputFile.read(into: inputBuffer)
+
+    let convertedBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCapacity)!
+
+    var error: NSError?
+    converter.convert(to: convertedBuffer, error: &error) { inNumPackets, outStatus in
+        outStatus.pointee = .haveData
+        return inputBuffer
+    }
+
+    if let error = error {
+        throw error
+    }
+
+    guard let channelData = convertedBuffer.int16ChannelData else {
+        throw NSError(domain: "WAVError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to access converted PCM data"])
+    }
+
+    let numSamples = Int(convertedBuffer.frameLength)
+    let sampleRate = Int(targetFormat.sampleRate)
+    let pcmPointer = channelData[0]
+
+    guard let mp3Data = encodeToMP3(pcmBuffer: pcmPointer, sampleRate: sampleRate, numSamples: numSamples) else {
+        throw NSError(domain: "MP3Error", code: 3, userInfo: [NSLocalizedDescriptionKey: "MP3 encoding failed"])
+    }
+
+    try mp3Data.write(to: outputMp3URL)
+    print("✅ MP3 saved to: \(outputMp3URL.path)")
 }

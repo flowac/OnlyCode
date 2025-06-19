@@ -7,40 +7,110 @@ import CoreImage
 import CoreGraphics
 import ImageIO
 
-struct CaptureApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
+extension MessageManager {
+    static let shared = MessageManager()
+}
+var voiceURL = "http://104.52.63.66:7001"
+var poseURL  = "http://104.52.63.66:7002"
+var codeURL  = "http://104.52.63.66:7003"
+
+func initURL() -> String {
+    let filename = "api.conf"
+    let desktop = FileManager.default.temporaryDirectory
+    let fileURL = desktop.appendingPathComponent(filename)
+    
+    if !FileManager.default.fileExists(atPath: fileURL.path) {
+        print("Using default server")
+        return "Ready"
+    }
+    
+    do {
+        let content = try String(contentsOf: fileURL)
+        let lines = content.components(separatedBy: .newlines)
+        voiceURL = lines[0]
+        poseURL  = lines[1]
+        codeURL  = lines[2]
+        httpGet(url: voiceURL, msg: "Voice")
+        httpGet(url: poseURL,  msg: "Pose")
+        httpGet(url: codeURL,  msg: "Code")
+    } catch {
+        print("Custom server: Error reading config \(fileURL.path): \(error)")
+        return "ERROR: Failed custom server init"
+    }
+    
+    print("Custom server URL from \(fileURL.path) applied")
+    return "Custom Server Ready"
+}
+
+class MessageManager: ObservableObject {
+    @Published var audioStatus: String = "Idle"
+    @Published var codeStatus: String = "Idle"
+    @Published var mainStatus: String = "Ready"
+    @Published var poseStatus: String = "Idle"
+    
+    func audio(_ status: String) {
+        DispatchQueue.main.async {
+            self.audioStatus = status
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
-        .defaultPosition(.topTrailing)
+    }
+    
+    func code(_ status: String) {
+        DispatchQueue.main.async {
+            self.codeStatus = status
+        }
+    }
+    
+    func main(_ status: String) {
+        DispatchQueue.main.async {
+            self.mainStatus = status
+        }
+    }
+    
+    func pose(_ status: String) {
+        DispatchQueue.main.async {
+            self.poseStatus = status
+        }
+    }
+    
+    func start() {
+        self.audio("Starting...")
+        self.code("Starting...")
+        self.pose("Starting...")
+        self.main("Recording Active")
+    }
+    
+    func stop() {
+        self.main("Stopping...")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.audio("Idle")
+            self.code("Idle")
+            self.pose("Idle")
+            self.main("Ready")
+        }
     }
 }
 
 struct ContentView: View {
-    @State private var status: String = "Ready"
-    @State private var audioPrefix: String = "Verbal Communication Analysis: "
-    @State private var codePrefix: String = "Typing Pattern Analysis: "
-    @State private var posePrefix: String = "Head Pose Analysis: "
-    @State private var audioStatus: String = "Idle"
-    @State private var codeStatus: String = "Idle"
-    @State private var poseStatus: String = "Idle"
+    @ObservedObject private var mm = MessageManager.shared
     @State var audio = AudioRecorder()
     @State private var floatingManager = FloatingWindowManager()
+    
+    init() {
+        mm.main(initURL())
+    }
     
     var body: some View {
         VStack(spacing: 20) {
             // Main status display
-            Text(status)
+            Text(mm.mainStatus)
                 .font(.headline)
                 .foregroundColor(.primary)
             
             // Status text boxes
             VStack(spacing: 12) {
-                StatusBox(title: "Verbal Communication Analysis", status: audioStatus, color: .blue)
-                StatusBox(title: "Typing Pattern Analysis", status: codeStatus, color: .orange)
-                StatusBox(title: "Head Pose Analysis", status: poseStatus, color: .green)
+                StatusBox(title: "Verbal Communication Analysis", status: mm.audioStatus, color: .blue)
+                StatusBox(title: "Typing Pattern Analysis", status: mm.codeStatus, color: .orange)
+                StatusBox(title: "Head Pose Analysis", status: mm.poseStatus, color: .green)
             }
             
             // Control buttons
@@ -51,46 +121,30 @@ struct ContentView: View {
                 
                 Button("Start Capture") {
                     print("Starting capture")
-                    status = "Starting..."
-                    audioStatus = "Starting..."
-                    codeStatus = "Starting..."
-                    poseStatus = "Starting..."
+                    mm.start()
                     
                     startAud() { ret in
-                        audioStatus = ret
+                        mm.audio(ret)
                     }
                     
                     let codeWindow = floatingManager.getCodeWindow()
                     let poseWindow = floatingManager.getPoseWindow()
-                    codeStatus = codeWindow != nil ? "Active" : "Idle"
-                    poseStatus = poseWindow != nil ? "Active" : "Idle"
+                    mm.code(codeWindow != nil ? "Active" : "Idle")
+                    mm.pose(poseWindow != nil ? "Active" : "Idle")
                     startCap()
-                    
-                    // Update status after operations
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        status = "Recording Active"
-                    }
                 }
                 .buttonStyle(.borderedProminent)
                 
                 Button("Stop Capture") {
-                    status = "Stopping..."
                     stopAud()
                     stopCap()
+                    mm.stop()
                     print("Stopping capture")
-                    
-                    // Update status after operations
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        status = "Ready"
-                        audioStatus = "Idle"
-                        codeStatus = "Idle"
-                        poseStatus = "Idle"
-                    }
                 }
                 .buttonStyle(.bordered)
             }
         }
-        .frame(width: 400, height: 300)
+        .frame(width: 360, height: 240)
         .padding()
         .onAppear {
             // Make window always on top
@@ -99,6 +153,7 @@ struct ContentView: View {
                 window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             }
         }
+        .onReceive(mm.$mainStatus) { _ in }
     }
 }
 

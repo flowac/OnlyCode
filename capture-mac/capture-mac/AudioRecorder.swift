@@ -93,6 +93,12 @@ class AudioRecorder: NSObject {
         engine.stop()
         audioFileOutput = nil
         print("Recording stopped. Saved to: \(outputURL.path)")
+        
+        httpPost(url: voiceURL, fileName: outputURL.path) { result in
+            if result != nil {
+                MessageManager.shared.audio(result!)
+            }
+        }
     }
 }
 
@@ -115,4 +121,32 @@ func stopAud() {
     stopTimer?.fire()
     usleep(200000) // sleep 200ms
     stopTimer?.invalidate()
+}
+
+func encodeToMP3(pcmBuffer: UnsafePointer<Int16>, sampleRate: Int, numSamples: Int) -> Data? {
+    let lame = lame_init()
+    lame_set_in_samplerate(lame, Int32(sampleRate))
+    lame_set_num_channels(lame, 1)
+    lame_set_VBR(lame, vbr_default)
+    lame_init_params(lame)
+
+    let mp3BufferSize = Int(1.25 * Float(numSamples) + 7200)
+    let mp3Buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: mp3BufferSize)
+
+    let bytesWritten = lame_encode_buffer(
+        lame,
+        pcmBuffer,
+        nil,
+        Int32(numSamples),
+        mp3Buffer,
+        Int32(mp3BufferSize)
+    )
+
+    lame_close(lame)
+
+    if bytesWritten > 0 {
+        return Data(bytes: mp3Buffer, count: Int(bytesWritten))
+    } else {
+        return nil
+    }
 }

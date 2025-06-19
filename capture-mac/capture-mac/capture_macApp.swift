@@ -16,5 +16,6 @@ struct capture_macApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
+        .windowResizability(.contentSize)
     }
 }

@@ -407,6 +407,21 @@ func saveToDesktop(image: CGImage, type: CapType) {
         do {
             try data.write(to: fileURL)
             print("Screenshot saved to: \(fileURL.path)")
+            
+            switch type {
+            case .code:
+                httpPost(url: codeURL, fileName: fileURL.path) { result in
+                    if result != nil {
+                        MessageManager.shared.code(result!)
+                    }
+                }
+            case .pose:
+                httpPost(url: poseURL, fileName: fileURL.path) { result in
+                    if result != nil {
+                        MessageManager.shared.pose(result!)
+                    }
+                }
+            }
         } catch {
             print("Error saving screenshot: \(error)")
         }

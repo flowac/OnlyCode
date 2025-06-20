@@ -19,6 +19,8 @@ fi
 
 prev=0
 flag=0
+sus_count=0
+total_count=0
 for FNAME in ${FLIST[@]}; do
     echo -n "$FNAME "
     sleep 0.1
@@ -31,14 +33,22 @@ for FNAME in ${FLIST[@]}; do
     # 0 wpm or less, or greater than 180 wpm will be ignored
     # Consecutive higher than or equal to 42 wpm will be flagged
     status="OK"
+    total_count=$(( $total_count + 1 ))
+
     if [ $diff -le 0 ] || [ $diff -ge 30 ]; then status="ignore"
     elif [ $diff -ge 7 ]; then
         flag=$(( $flag + 1 ))
-        if [ $flag -gt 1 ]; then status="suspicious"; fi
+        if [ $flag -gt 1 ]; then
+            status="suspicious"
+            sus_count=$(( $sus_count + 1 ))
+        fi
     else flag=0
     fi
 
     printf "%3d %3d %s\n" $curr $diff $status
     prev=$curr
 done
+
+sus_percent=$(( $sus_count * 100 / $total_count ))
+printf "%3d out of %3d frames suspicious\n%3d%% sus\n" $sus_count $total_count $sus_percent
 

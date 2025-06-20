@@ -124,7 +124,13 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         LOGA << "Sending words to " << winrt::to_string(CODE_API) << std::endl;
         auto codeStr = co_await SendHttpPost(fname, CODE_API);
         LOGA << "Word count: " << winrt::to_string(codeStr) << std::endl;
-        SetWindowText(m_code, codeStr.c_str());
+
+        std::unordered_map<winrt::hstring, double> query;
+        query[L"value"] = 0;
+        ParseJson(codeStr, query);
+
+        std::wstring result = std::format(L"word count: {}", query[L"value"]);
+        SetWindowText(m_code, result.c_str());
         break;
     }
     case CaptureIndex::POSE:
@@ -152,7 +158,14 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         LOGA << "Sending pose to " << winrt::to_string(POSE_API) << std::endl;
         auto poseStr = co_await SendHttpPost(fname, POSE_API);
         LOGA << "Detected pose: " << winrt::to_string(poseStr) << std::endl;
-        SetWindowText(m_pose, poseStr.c_str());
+
+        std::unordered_map<winrt::hstring, double> query;
+        query[L"pitch"] = 0;
+        query[L"yaw"] = 0;
+        ParseJson(poseStr, query);
+
+        std::wstring result = std::format(L"pitch: {}\r\nyaw:   {}", query[L"pitch"], query[L"yaw"]);
+        SetWindowText(m_pose, result.c_str());
         break;
     }
     default:

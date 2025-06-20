@@ -149,6 +149,7 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="CaptureSnapshot.h" />
+    <ClInclude Include="CustomWindowControls.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SampleWindow.h" />

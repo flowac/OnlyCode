@@ -15,11 +15,11 @@
 
 static std::ofstream LOGA("audio.log", std::ios_base::out | std::ios_base::trunc);
 
-winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t *pData, size_t dataSize, WAVEFORMATEX &srcFormat)
+winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t* pData, size_t dataSize, WAVEFORMATEX& srcFormat)
 {
     static bool logOnce{ true };
     if (logOnce) {
-		logOnce = false;
+        logOnce = false;
         LOGA << "format   " << srcFormat.wFormatTag << std::endl;
         LOGA << "channel  " << srcFormat.nChannels << std::endl;
         LOGA << "sample/s " << srcFormat.nSamplesPerSec << std::endl;
@@ -29,13 +29,13 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t 
         LOGA << "bsize    " << srcFormat.cbSize << std::endl;
     }
     char tbuf[64]{};
-	time_t now = time(nullptr);
+    time_t now = time(nullptr);
     ctime_s(tbuf, 64, &now);
     LOGA << tbuf;
 
-	// Assume the source format is IEEE_FLOAT
+    // Assume the source format is IEEE_FLOAT
     const int sampleSize = srcFormat.nChannels * (srcFormat.wBitsPerSample / 8);
-    const int sampleCount = static_cast<int>( dataSize / sampleSize );
+    const int sampleCount = static_cast<int>(dataSize / sampleSize);
     const int runtime = sampleCount / srcFormat.nSamplesPerSec;
 
     const double sampleDuration = 0.5; // seconds
@@ -48,20 +48,20 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t 
     for (int i = 1, j = 0; i <= sampleCount; ++i, j += sampleSize)
     {
         float sample = *reinterpret_cast<float*>(pData + j);
-        sampleSum += static_cast<uint16_t>( std::min(1.0f, abs(sample)) * UINT16_MAX );
+        sampleSum += static_cast<uint16_t>(std::min(1.0f, abs(sample)) * UINT16_MAX);
         if (i % samplesPerSegment == 0) {
-            timeslot.push_back(static_cast<uint16_t>( sampleSum / samplesPerSegment ));
+            timeslot.push_back(static_cast<uint16_t>(sampleSum / samplesPerSegment));
             sampleSum = 0;
             topSample = std::max(topSample, timeslot.back());
-			LOGA << "Sample " << timeslot.size() << " average: " << timeslot.back() << std::endl;
-		}
+            LOGA << "Sample " << timeslot.size() << " average: " << timeslot.back() << std::endl;
+        }
     }
 
-    uint16_t silenceThreshold = static_cast<uint16_t>( topSample * 0.2 );
-	for (auto x : timeslot) samplesLoud += (x > silenceThreshold);
-	LOGA << "Recorded " << runtime << " seconds, " << samplesLoud * sampleDuration
-         << " seconds effective, threshold " << silenceThreshold
-         << " max " << topSample << std::endl;
+    uint16_t silenceThreshold = static_cast<uint16_t>(topSample * 0.2);
+    for (auto x : timeslot) samplesLoud += (x > silenceThreshold);
+    LOGA << "Recorded " << runtime << " seconds, " << samplesLoud * sampleDuration
+        << " seconds effective, threshold " << silenceThreshold
+        << " max " << topSample << std::endl;
 
     WCHAR fname[12];
     swprintf_s(fname, L"output.mp3");
@@ -83,11 +83,12 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t 
     LOGA << "Encode " << dataSize << " bytes to MP3\n";
 
     for (size_t pos = 0; pos < dataSize; pos += readv) {
-        readv = std::min(I3E_SIZE, static_cast<int>( dataSize - pos ));
+        readv = std::min(I3E_SIZE, static_cast<int>(dataSize - pos));
         if (readv > 0) {
             writev = lame_encode_buffer_interleaved_ieee_float(lame,
                 reinterpret_cast<float*>(pData + pos), readv >> 3, mp3_buffer, MP3_SIZE);
-        } else {
+        }
+        else {
             writev = lame_encode_flush(lame, mp3_buffer, MP3_SIZE);
         }
         mp3.write(reinterpret_cast<const char*>(mp3_buffer), writev);
@@ -98,8 +99,15 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t 
 
     LOGA << "Sending speech to " << winrt::to_string(VOICE_API) << std::endl;
     auto voiceStr = co_await SendHttpPost(fname, VOICE_API);
-	LOGA << "Speech summary: " << winrt::to_string(voiceStr) << std::endl;
-    SetWindowText(m_voice, voiceStr.c_str());
+    LOGA << "Speech summary: " << winrt::to_string(voiceStr) << std::endl;
+
+    std::unordered_map<winrt::hstring, double> query;
+    query[L"density"] = 0;
+    query[L"impact"] = 0;
+	ParseJson(voiceStr, query);
+
+	std::wstring result = std::format(L"density: {}\r\nimpact:  {}", query[L"density"], query[L"impact"]);
+    SetWindowText(m_voice, result.c_str());
     co_return true;
 }
 

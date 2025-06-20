@@ -64,7 +64,8 @@
 #include <robmikh.common/dispatcherqueue.desktop.interop.h>
 #include <robmikh.common/stream.interop.h>
 #include <robmikh.common/hwnd.interop.h>
-#include <robmikh.common/ControlsHelper.h>
+//#include <robmikh.common/ControlsHelper.h>
+#include "CustomWindowControls.h"
 
 // Value set in main.cpp
 extern winrt::hstring VOICE_API;

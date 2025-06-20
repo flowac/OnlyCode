@@ -69,3 +69,22 @@ winrt::IAsyncOperation<winrt::hstring> SendHttpGet(
 
     co_return responseText;
 }
+
+#include <winrt/Windows.Data.Json.h>
+void ParseJson(winrt::Windows::Data::Json::JsonObject jsonObject, std::unordered_map<winrt::hstring, double> &query)
+{
+    for (const auto& pair : jsonObject) {
+        if (query.contains(pair.Key())
+            && pair.Value().ValueType() == winrt::Windows::Data::Json::JsonValueType::Number) {
+            query[pair.Key()] = pair.Value().GetNumber();
+        } else if (pair.Value().ValueType() == winrt::Windows::Data::Json::JsonValueType::Object) {
+            ParseJson(pair.Value().GetObject(), query);
+        }
+    }
+}
+
+void ParseJson(winrt::hstring data, std::unordered_map<winrt::hstring, double> &query)
+{
+    winrt::Windows::Data::Json::JsonObject jsonObject = winrt::Windows::Data::Json::JsonObject::Parse(data);
+	ParseJson(jsonObject, query);
+}

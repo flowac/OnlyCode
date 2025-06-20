@@ -19,6 +19,7 @@
     <ClInclude Include="Audio.h" />
     <ClInclude Include="Web.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="CustomWindowControls.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

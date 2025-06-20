@@ -126,7 +126,6 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         LOGA << "Word count: " << winrt::to_string(codeStr) << std::endl;
 
         std::unordered_map<winrt::hstring, double> query;
-        query[L"value"] = 0;
         ParseJson(codeStr, query);
 
         std::wstring result = std::format(L"word count: {}", query[L"value"]);
@@ -160,8 +159,6 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         LOGA << "Detected pose: " << winrt::to_string(poseStr) << std::endl;
 
         std::unordered_map<winrt::hstring, double> query;
-        query[L"pitch"] = 0;
-        query[L"yaw"] = 0;
         ParseJson(poseStr, query);
 
         std::wstring result = std::format(L"pitch: {}\r\nyaw:   {}", query[L"pitch"], query[L"yaw"]);

@@ -20,21 +20,21 @@ class voice:
     # if only positive then it means no conflict / no learning
     # if only negative then did not solve problem
     def score(self, word_count, word_percent, pos_count, neg_count):
-        density = "low"
-        impact = "low"
+        density = 1
+        impact  = 1
         if word_count < 30:
             return None, None
 
         if word_percent > 15:
-            density = "good"
+            density = 2
             if word_percent > 30:
-                density = "exceptional"
+                density = 3
 
         pn_total = pos_count + neg_count
         if pos_count >= 1 and neg_count >= 1:
-            impact = "medium"
+            impact = 2
             if pn_total >= 4:
-                impact = "high"
+                impact = 3
 
         return density, impact
 

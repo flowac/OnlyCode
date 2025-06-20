@@ -102,8 +102,6 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t*
     LOGA << "Speech summary: " << winrt::to_string(voiceStr) << std::endl;
 
     std::unordered_map<winrt::hstring, double> query;
-    query[L"density"] = 0;
-    query[L"impact"] = 0;
 	ParseJson(voiceStr, query);
 
 	std::wstring result = std::format(L"density: {}\r\nimpact:  {}", query[L"density"], query[L"impact"]);

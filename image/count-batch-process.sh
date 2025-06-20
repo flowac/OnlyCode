@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 DEST="104.52.63.66"
 PORT="7003"
 
@@ -28,8 +30,8 @@ for FNAME in ${FLIST[@]}; do
     # Effective words per minute is 6 times diff
     # 0 wpm or less, or greater than 180 wpm will be ignored
     # Consecutive higher than or equal to 42 wpm will be flagged
-    status="ok"
-    if [ $diff -le 0 ] || [ $diff -ge 30 ]; then status="-"
+    status="OK"
+    if [ $diff -le 0 ] || [ $diff -ge 30 ]; then status="ignore"
     elif [ $diff -ge 7 ]; then
         flag=$(( $flag + 1 ))
         if [ $flag -gt 1 ]; then status="suspicious"; fi

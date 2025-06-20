@@ -16,6 +16,7 @@ if [ $? -ne 0 ]; then
 fi
 
 prev=0
+flag=0
 for FNAME in ${FLIST[@]}; do
     echo -n "$FNAME "
     sleep 0.1
@@ -23,9 +24,16 @@ for FNAME in ${FLIST[@]}; do
     if [ $? -ne 0 ]; then curr=0; fi
     diff=$(( $curr - $prev ))
 
+    # Sampling 1 frame every 10 seconds
+    # Effective words per minute is 6 times diff
+    # 0 wpm or less, or greater than 180 wpm will be ignored
+    # Consecutive higher than or equal to 42 wpm will be flagged
     status="ok"
     if [ $diff -le 0 ] || [ $diff -ge 30 ]; then status="-"
-    elif [ $diff -ge 10 ]; then status="suspicious"
+    elif [ $diff -ge 7 ]; then
+        flag=$(( $flag + 1 ))
+        if [ $flag -gt 1 ]; then status="suspicious"; fi
+    else flag=0
     fi
 
     printf "%3d %3d %s\n" $curr $diff $status

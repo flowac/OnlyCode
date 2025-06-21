@@ -5,6 +5,8 @@
 
 #include "Web.h"
 
+extern std::ofstream LOGA;
+
 namespace winrt {
     using namespace winrt::Windows::Foundation;
     using namespace winrt::Windows::Web::Http;
@@ -27,27 +29,27 @@ winrt::IAsyncOperation<winrt::hstring> SendHttpPost(
     const WCHAR* fname,
     const winrt::hstring& serverUrl)
 {
-    winrt::hstring responseText(L"Local file read error");
-    winrt::IBuffer ibuf = LoadFileBuffer(fname);
-    winrt::HttpBufferContent fileContent(ibuf);
-    WCHAR dispo[256];
-	swprintf_s(dispo, L"form-data; name=\"file\"; filename=\"%s\"", fname);
-    fileContent.Headers().Append(L"Content-Disposition", dispo);
-
-    winrt::HttpClient httpClient;
-    winrt::HttpRequestMessage request(winrt::HttpMethod::Post(), winrt::Uri(serverUrl));
-    winrt::HttpMultipartFormDataContent multipartContent(L"form-data");
-    multipartContent.Add(fileContent);
-    request.Content(multipartContent);
-
-    winrt::HttpResponseMessage response = co_await httpClient.SendRequestAsync(request);
+    winrt::hstring responseText;
     try {
+        winrt::IBuffer ibuf = LoadFileBuffer(fname);
+        winrt::HttpBufferContent fileContent(ibuf);
+        WCHAR dispo[256];
+	    swprintf_s(dispo, L"form-data; name=\"file\"; filename=\"%s\"", fname);
+        fileContent.Headers().Append(L"Content-Disposition", dispo);
+
+        winrt::HttpClient httpClient;
+        winrt::HttpRequestMessage request(winrt::HttpMethod::Post(), winrt::Uri(serverUrl));
+        winrt::HttpMultipartFormDataContent multipartContent(L"form-data");
+        multipartContent.Add(fileContent);
+        request.Content(multipartContent);
+
+        winrt::HttpResponseMessage response = co_await httpClient.SendRequestAsync(request);
         response.EnsureSuccessStatusCode();
         winrt::IBuffer responseBuffer = co_await response.Content().ReadAsBufferAsync();
         winrt::DataReader reader = winrt::DataReader::FromBuffer(responseBuffer);
         responseText = reader.ReadString(responseBuffer.Length());
     } catch (const std::exception& e) {
-        responseText = winrt::to_hstring(e.what());
+        LOGA << e.what() << std::endl;
     }
 
     co_return responseText;
@@ -56,15 +58,15 @@ winrt::IAsyncOperation<winrt::hstring> SendHttpPost(
 winrt::IAsyncOperation<winrt::hstring> SendHttpGet(
     const winrt::hstring& serverUrl)
 {
-    winrt::HttpClient httpClient;
-    winrt::HttpResponseMessage response = co_await httpClient.GetAsync(winrt::Uri(serverUrl));
-
     winrt::hstring responseText;
     try {
+        winrt::HttpClient httpClient;
+        winrt::HttpResponseMessage response = co_await httpClient.GetAsync(winrt::Uri(serverUrl));
+
         response.EnsureSuccessStatusCode();
         responseText = co_await response.Content().ReadAsStringAsync();
     } catch (const std::exception& e) {
-        responseText = winrt::to_hstring(e.what());
+        LOGA << e.what() << std::endl;
     }
 
     co_return responseText;
@@ -73,7 +75,6 @@ winrt::IAsyncOperation<winrt::hstring> SendHttpGet(
 #include <winrt/Windows.Data.Json.h>
 void ParseJson(winrt::Windows::Data::Json::JsonObject jsonObject, std::unordered_map<winrt::hstring, double> &query)
 {
-	query.clear();
     for (const auto& pair : jsonObject) {
         if (pair.Value().ValueType() == winrt::Windows::Data::Json::JsonValueType::Number) {
             query[pair.Key()] = pair.Value().GetNumber();
@@ -85,6 +86,11 @@ void ParseJson(winrt::Windows::Data::Json::JsonObject jsonObject, std::unordered
 
 void ParseJson(winrt::hstring data, std::unordered_map<winrt::hstring, double> &query)
 {
-    winrt::Windows::Data::Json::JsonObject jsonObject = winrt::Windows::Data::Json::JsonObject::Parse(data);
-	ParseJson(jsonObject, query);
+    try {
+		query.clear();
+        winrt::Windows::Data::Json::JsonObject jsonObject = winrt::Windows::Data::Json::JsonObject::Parse(data);
+        ParseJson(jsonObject, query);
+    } catch (const winrt::hresult_error& e) {
+        LOGA << "Failed to parse JSON: " << to_string(e.message()) << std::endl;
+	}
 }

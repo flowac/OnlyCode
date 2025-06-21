@@ -121,14 +121,36 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
             co_return false;
         }
 
-        LOGA << "Sending words to " << winrt::to_string(CODE_API) << std::endl;
+        //LOGA << "Sending words to " << winrt::to_string(CODE_API) << std::endl;
         auto codeStr = co_await SendHttpPost(fname, CODE_API);
-        LOGA << "Word count: " << winrt::to_string(codeStr) << std::endl;
+        if (codeStr.empty()) {
+            LOGA << "Failed to get word count data\n";
+            co_return false;
+		}
 
         std::unordered_map<winrt::hstring, double> query;
         ParseJson(codeStr, query);
 
-        std::wstring result = std::format(L"word count: {}", query[L"value"]);
+		int curr = static_cast<int>(query[L"value"]);
+		int diff = curr - m_prevCodeCount;
+        bool isSus{ false };
+		m_prevCodeCount = curr;
+
+        if (diff > 0 && diff < 30) {
+            ++m_totalCode;
+            if (diff >= 7) {
+                if (m_prevCodeSus) {
+                    ++m_susCode;
+					isSus = true;
+                }
+				m_prevCodeSus = true;
+            } else {
+				m_prevCodeSus = false;
+            }
+        }
+        
+        std::wstring result = std::format(L"word count: {}\r\nchange: {}\r\nsuspicious: {}\r\npercent suspicious: {}", curr, diff, isSus, 100 * m_susCode / m_totalCode);
+        LOGA << std::format("word count: {}, change: {}, suspicious: {}, percent suspicious: {}", curr, diff, isSus, 100 * m_susCode / m_totalCode) << std::endl;
         SetWindowText(m_code, result.c_str());
         break;
     }
@@ -154,14 +176,36 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
         encoder.SetPixelData(bitmapPixelFormat, winrt::BitmapAlphaMode::Ignore, width, height, 1.0, 1.0, bytes);
         co_await encoder.FlushAsync();
 
-        LOGA << "Sending pose to " << winrt::to_string(POSE_API) << std::endl;
+        //LOGA << "Sending pose to " << winrt::to_string(POSE_API) << std::endl;
         auto poseStr = co_await SendHttpPost(fname, POSE_API);
-        LOGA << "Detected pose: " << winrt::to_string(poseStr) << std::endl;
+        if (poseStr.empty()) {
+            LOGA << "Failed to get pose data\n";
+            co_return false;
+		}
+        //LOGA << "Detected pose: " << winrt::to_string(poseStr) << std::endl;
 
         std::unordered_map<winrt::hstring, double> query;
         ParseJson(poseStr, query);
 
-        std::wstring result = std::format(L"pitch: {}\r\nyaw:   {}", query[L"pitch"], query[L"yaw"]);
+        int pitch = static_cast<int>(query[L"pitch"]);
+        int yaw = static_cast<int>(query[L"yaw"]);
+        bool isSus{ false };
+
+        if (abs(yaw) < 60 && abs(pitch) < 60) {
+            ++m_totalPose;
+            if (abs(yaw) >= 15 || pitch < -10 || pitch > 25) {
+                if (m_prevPoseSus) {
+                    ++m_susPose;
+                    isSus = true;
+                }
+                m_prevPoseSus = true;
+            } else {
+                m_prevPoseSus = false;
+            }
+        }
+
+        std::wstring result = std::format(L"pitch: {}\r\nyaw: {}\r\nsuspicious: {}\r\npercent suspicious: {}", pitch, yaw, isSus, 100 * m_susPose / m_totalPose);
+        LOGA << std::format("pitch: {}, yaw: {}, suspicious: {}, percent suspicious: {}", pitch, yaw, isSus, 100 * m_susPose / m_totalPose) << std::endl;
         SetWindowText(m_pose, result.c_str());
         break;
     }

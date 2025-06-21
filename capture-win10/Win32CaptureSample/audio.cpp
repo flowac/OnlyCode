@@ -53,7 +53,7 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t*
             timeslot.push_back(static_cast<uint16_t>(sampleSum / samplesPerSegment));
             sampleSum = 0;
             topSample = std::max(topSample, timeslot.back());
-            LOGA << "Sample " << timeslot.size() << " average: " << timeslot.back() << std::endl;
+            //LOGA << "Sample " << timeslot.size() << " average: " << timeslot.back() << std::endl;
         }
     }
 
@@ -97,14 +97,29 @@ winrt::Windows::Foundation::IAsyncOperation<bool> AudioCapture::SaveWav(uint8_t*
     lame_close(lame);
     mp3.close();
 
-    LOGA << "Sending speech to " << winrt::to_string(VOICE_API) << std::endl;
+    //LOGA << "Sending speech to " << winrt::to_string(VOICE_API) << std::endl;
     auto voiceStr = co_await SendHttpPost(fname, VOICE_API);
-    LOGA << "Speech summary: " << winrt::to_string(voiceStr) << std::endl;
+    if (voiceStr.empty()) {
+        LOGA << "Failed to get response from voice API" << std::endl;
+        co_return false;
+	}
+    //LOGA << "Speech summary: " << winrt::to_string(voiceStr) << std::endl;
 
     std::unordered_map<winrt::hstring, double> query;
 	ParseJson(voiceStr, query);
 
-	std::wstring result = std::format(L"density: {}\r\nimpact:  {}", query[L"density"], query[L"impact"]);
+	int density = static_cast<int>(query[L"density"]);
+	int impact = static_cast<int>(query[L"impact"]);
+    int score{ 0 };
+    if (density > 0 && density < m_density.size() && impact > 0 && impact < m_impact.size()) {
+        ++m_totalDP;
+		++m_density[density];
+		++m_impact[impact];
+		score = commsScore();
+	}
+
+    std::wstring result = std::format(L"density: {}\r\nimpact: {}\r\nscore(1-5): {}", density, impact, score);
+    LOGA << std::format("density: {}, impact: {}, score: {}", density, impact, score) << std::endl;
     SetWindowText(m_voice, result.c_str());
     co_return true;
 }
@@ -220,4 +235,23 @@ void AudioCapture::CaptureThread()
 
     m_pAudioClient->Stop();
     CoTaskMemFree(pFormat);
+}
+
+int AudioCapture::commsScore()
+{
+    int maxDensity{ 0 };
+	int maxImpact{ 0 };
+    for (int i = m_density.size() - 1; i > 0; --i) {
+        if (100 * m_density[i] / m_totalDP > tierThreshold) {
+            maxDensity = i;
+            break;
+		}
+    }
+    for (int i = m_impact.size() - 1; i > 0; --i) {
+        if (100 * m_impact[i] / m_totalDP > tierThreshold) {
+            maxImpact = i;
+            break;
+        }
+	}
+	return std::max(0, maxDensity + maxImpact - 1);
 }

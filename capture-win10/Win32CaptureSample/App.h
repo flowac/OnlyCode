@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include "SimpleCapture.h"
 #include "Audio.h"
 
@@ -37,6 +38,14 @@ private:
     winrt::Windows::Storage::StorageFolder pwd{ nullptr };
     AudioCapture m_record;
     bool audio_ready{ false };
+
+    bool m_prevCodeSus{ false };
+	int m_prevCodeCount{ 0 };
+    int m_totalCode{ 1 };
+    int m_susCode{ 0 };
+    bool m_prevPoseSus{ false };
+	int m_totalPose{ 1 };
+	int m_susPose{ 0 };
 
     winrt::Windows::Graphics::DirectX::Direct3D11::IDirect3DDevice m_device{ nullptr };
     std::unique_ptr<SimpleCapture>             m_capture[CaptureIndex::CAPTURE_LEN]{ 0,0 };

@@ -6,19 +6,19 @@ extern std::ofstream LOGA;
 
 namespace winrt
 {
-    using namespace Windows::Foundation;
-    using namespace Windows::Foundation::Metadata;
-    using namespace Windows::Graphics::Capture;
-    using namespace Windows::Graphics::DirectX;
-    using namespace Windows::System;
-    using namespace Windows::UI;
-    using namespace Windows::UI::Composition;
-    using namespace Windows::UI::Composition::Desktop;
+	using namespace Windows::Foundation;
+	using namespace Windows::Foundation::Metadata;
+	using namespace Windows::Graphics::Capture;
+	using namespace Windows::Graphics::DirectX;
+	using namespace Windows::System;
+	using namespace Windows::UI;
+	using namespace Windows::UI::Composition;
+	using namespace Windows::UI::Composition::Desktop;
 }
 
 namespace util
 {
-    using namespace oc::controls;
+	using namespace oc::controls;
 }
 
 const std::wstring SampleWindow::ClassName = L"Cap.SampleWindow";
@@ -45,212 +45,208 @@ HFONT g_hFontText = nullptr;
 
 void CreateColors()
 {
-    g_hFontTitle = CreateFontW(-18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-    g_hFontButton = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-    g_hFontText = CreateFontW(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
-    g_buttonBrush = CreateSolidBrush(BUTTON_COLOR);
-    g_labelBrush = CreateSolidBrush(BACKGROUND_COLOR);
-    g_texteditBrush = CreateSolidBrush(BACKGROUND_COLOR_LITE);
+	g_hFontTitle = CreateFontW(-18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+	g_hFontButton = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+	g_hFontText = CreateFontW(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+	g_buttonBrush = CreateSolidBrush(BUTTON_COLOR);
+	g_labelBrush = CreateSolidBrush(BACKGROUND_COLOR);
+	g_texteditBrush = CreateSolidBrush(BACKGROUND_COLOR_LITE);
 }
 
 void SampleWindow::RegisterWindowClass()
 {
-    auto instance = winrt::check_pointer(GetModuleHandleW(nullptr));
-    WNDCLASSEX wcex = {};
-    wcex.cbSize = sizeof(wcex);
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = WndProc;
-    wcex.hInstance = instance;
-    wcex.hIcon = LoadIconW(instance, IDI_APPLICATION);
-    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    wcex.hbrBackground = CreateSolidBrush(BACKGROUND_COLOR);
-    wcex.lpszClassName = ClassName.c_str();
-    wcex.hIconSm = LoadIconW(wcex.hInstance, IDI_APPLICATION);
-    winrt::check_bool(RegisterClassExW(&wcex));
+	auto instance = winrt::check_pointer(GetModuleHandleW(nullptr));
+	WNDCLASSEX wcex = {};
+	wcex.cbSize = sizeof(wcex);
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.hInstance = instance;
+	wcex.hIcon = LoadIconW(instance, IDI_APPLICATION);
+	wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+	wcex.hbrBackground = CreateSolidBrush(BACKGROUND_COLOR);
+	wcex.lpszClassName = ClassName.c_str();
+	wcex.hIconSm = LoadIconW(wcex.hInstance, IDI_APPLICATION);
+	winrt::check_bool(RegisterClassExW(&wcex));
 }
 
 SampleWindow::SampleWindow(int width, int height, std::shared_ptr<App> app)
 {
-    auto instance = winrt::check_pointer(GetModuleHandleW(nullptr));
+	auto instance = winrt::check_pointer(GetModuleHandleW(nullptr));
 
-    std::call_once(SampleWindowClassRegistration, []() { RegisterWindowClass(); });
-    std::call_once(RegisterFonts, []() { CreateColors(); });
+	std::call_once(SampleWindowClassRegistration, []() { RegisterWindowClass(); });
+	std::call_once(RegisterFonts, []() { CreateColors(); });
 
-    // Inactivative options would be useful for the next project
-    auto exStyle = WS_EX_TOPMOST | WS_EX_LAYERED;// | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE;
-    auto style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;// | WS_THICKFRAME;// WS_OVERLAPPEDWINDOW;
+	// Inactivative options would be useful for the next project
+	auto exStyle = WS_EX_TOPMOST | WS_EX_LAYERED;// | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE;
+	auto style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;// | WS_THICKFRAME;// WS_OVERLAPPEDWINDOW;
 
-    RECT rect = { 0, 0, width, height };
-    winrt::check_bool(AdjustWindowRectEx(&rect, style, false, exStyle));
-    auto adjustedWidth = rect.right - rect.left;
-    auto adjustedHeight = rect.bottom - rect.top;
+	RECT rect = { 0, 0, width, height };
+	winrt::check_bool(AdjustWindowRectEx(&rect, style, false, exStyle));
+	auto adjustedWidth = rect.right - rect.left;
+	auto adjustedHeight = rect.bottom - rect.top;
 
-    winrt::check_bool(CreateWindowExW(exStyle, ClassName.c_str(), L"Cap", style,
-        CW_USEDEFAULT, CW_USEDEFAULT, adjustedWidth, adjustedHeight, nullptr, nullptr, instance, this));
-    WINRT_ASSERT(m_window);
-    SetLayeredWindowAttributes(m_window, RGB(100, 100, 100), 250, LWA_ALPHA);
+	winrt::check_bool(CreateWindowExW(exStyle, ClassName.c_str(), L"Cap", style,
+		CW_USEDEFAULT, CW_USEDEFAULT, adjustedWidth, adjustedHeight, nullptr, nullptr, instance, this));
+	WINRT_ASSERT(m_window);
+	SetLayeredWindowAttributes(m_window, RGB(100, 100, 100), 250, LWA_ALPHA);
 
-    m_app = app;
-    m_app->InitializeWithWindow(m_window);
-    CreateControls(instance);
-    m_app->SetResultPtr(m_poseMsg, m_codeMsg, m_voiceMsg);
+	m_app = app;
+	m_app->InitializeWithWindow(m_window);
+	CreateControls(instance);
+	m_app->SetResultPtr(m_poseMsg, m_codeMsg);
 
-    if (bool secure = SetWindowDisplayAffinity(m_window, WDA_EXCLUDEFROMCAPTURE); // Prevents the window from being captured
-    secure) LOGA << "Session secured: Successfully configured WDA_EXCLUDEFROMCAPTURE\n";
-    else    LOGA << "Session NOT secure: SetWindowDisplayAffinity failed with error: " << GetLastError() << std::endl;
+	if (bool secure = SetWindowDisplayAffinity(m_window, WDA_EXCLUDEFROMCAPTURE); // Prevents the window from being captured
+		secure) LOGA << "Session secured: Successfully configured WDA_EXCLUDEFROMCAPTURE\n";
+	else    LOGA << "Session NOT secure: SetWindowDisplayAffinity failed with error: " << GetLastError() << std::endl;
 
-    ShowWindow(m_window, SW_SHOW);
-    UpdateWindow(m_window);
+	ShowWindow(m_window, SW_SHOW);
+	UpdateWindow(m_window);
 }
 
 SampleWindow::~SampleWindow()
-{}
+{
+}
 
 LRESULT SampleWindow::MessageHandler(UINT const message, WPARAM const wparam, LPARAM const lparam)
 {
-    switch (message)
-    {
-    case WM_COMMAND:
-    {
-        auto command = HIWORD(wparam);
-        auto hwnd = (HWND)lparam;
-        switch (command)
-        {
-        case BN_CLICKED:
-            if (hwnd == m_poseButton)
-            {
-                OnPickerButtonClicked(CaptureIndex::POSE);
-            }
-            else if (hwnd == m_codeButton)
-            {
-                OnPickerButtonClicked(CaptureIndex::CODE);
-            }
-            else if (hwnd == m_stopButton)
-            {
-                StopCapture(CaptureIndex::POSE);
-                StopCapture(CaptureIndex::CODE);
-            }
-            break;
-        }
-    }
-    break;
-    //case WM_CTLCOLORSTATIC:
-    //    return util::StaticControlColorMessageHandler(wparam, lparam);
-    case WM_CTLCOLORBTN:  // Button colors
-    {
-        HDC hdc = (HDC)wparam;
-        SetTextColor(hdc, TEXT_COLOR);
-        SetBkColor(hdc, BUTTON_COLOR);
-        return (LRESULT)g_buttonBrush;
-    }
-    break;
-    case WM_CTLCOLORSTATIC:  // Static/Label colors
-    {
-        HDC hdc = (HDC)wparam;
-        SetTextColor(hdc, TEXT_COLOR);
-        SetBkColor(hdc, BACKGROUND_COLOR);
-        return (LRESULT)g_labelBrush;
-    }
-    break;
-    case WM_CTLCOLOREDIT:  // Edit control colors
-    {
-        HDC hdc = (HDC)wparam;
-        SetTextColor(hdc, TEXT_COLOR);
-        SetBkColor(hdc, BACKGROUND_COLOR_LITE);
-        return (LRESULT)g_texteditBrush;
-    }
-    break;
-    default:
-        return base_type::MessageHandler(message, wparam, lparam);
-    }
+	switch (message)
+	{
+	case WM_COMMAND:
+	{
+		auto command = HIWORD(wparam);
+		auto hwnd = (HWND)lparam;
+		switch (command)
+		{
+		case BN_CLICKED:
+			if (hwnd == m_poseButton)
+			{
+				OnPickerButtonClicked(CaptureIndex::POSE);
+			}
+			else if (hwnd == m_codeButton)
+			{
+				if (m_isCap[CaptureIndex::CODE])
+				{
+					StopCapture(CaptureIndex::CODE);
+					SetWindowText(m_codeButton, L"Code Detection");
+				}
+				else
+				{
+					OnPickerButtonClicked(CaptureIndex::CODE);
+				}
+			}
+			break;
+		}
+	}
+	break;
+	//case WM_CTLCOLORSTATIC:
+	//    return util::StaticControlColorMessageHandler(wparam, lparam);
+	case WM_CTLCOLORBTN:  // Button colors
+	{
+		HDC hdc = (HDC)wparam;
+		SetTextColor(hdc, TEXT_COLOR);
+		SetBkColor(hdc, BUTTON_COLOR);
+		return (LRESULT)g_buttonBrush;
+	}
+	break;
+	case WM_CTLCOLORSTATIC:  // Static/Label colors
+	{
+		HDC hdc = (HDC)wparam;
+		SetTextColor(hdc, TEXT_COLOR);
+		SetBkColor(hdc, BACKGROUND_COLOR);
+		return (LRESULT)g_labelBrush;
+	}
+	break;
+	case WM_CTLCOLOREDIT:  // Edit control colors
+	{
+		HDC hdc = (HDC)wparam;
+		SetTextColor(hdc, TEXT_COLOR);
+		SetBkColor(hdc, BACKGROUND_COLOR_LITE);
+		return (LRESULT)g_texteditBrush;
+	}
+	break;
+	default:
+		return base_type::MessageHandler(message, wparam, lparam);
+	}
 
-    return 0;
+	return 0;
 }
 
 void SampleWindow::OnCaptureStarted(winrt::GraphicsCaptureItem const& item, CaptureIndex idx)
 {
-    m_itemClosedRevoker[idx].revoke();
-    m_isCap[idx] = true;
+	m_itemClosedRevoker[idx].revoke();
+	m_isCap[idx] = true;
 
-    switch (idx)
-    {
-    case CaptureIndex::POSE:
-        m_itemClosedRevoker[idx] = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosedPose });
-        break;
-    case CaptureIndex::CODE:
-        m_itemClosedRevoker[idx] = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosedCount });
-        break;
-    }
-    SetSubTitle();
-    EnableWindow(m_stopButton, true);
+	switch (idx)
+	{
+	case CaptureIndex::POSE:
+		m_itemClosedRevoker[idx] = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosedPose });
+		break;
+	case CaptureIndex::CODE:
+		SetWindowText(m_codeButton, L"Stop Code Detection");
+		m_itemClosedRevoker[idx] = item.Closed(winrt::auto_revoke, { this, &SampleWindow::OnCaptureItemClosedCount });
+		break;
+	}
+	SetSubTitle();
 }
 
 winrt::fire_and_forget SampleWindow::OnPickerButtonClicked(CaptureIndex idx)
 {
-    auto selectedItem = co_await m_app->StartCaptureWithPickerAsync(idx);
-    if (selectedItem) OnCaptureStarted(selectedItem, idx);
+	auto selectedItem = co_await m_app->StartCaptureWithPickerAsync(idx);
+	if (selectedItem) OnCaptureStarted(selectedItem, idx);
 }
 
 // Not DPI aware but could be by multiplying the constants based on the monitor scale factor
 void SampleWindow::CreateControls(HINSTANCE instance)
 {
-    auto isWin32ProgrammaticPresent = winrt::ApiInformation::IsApiContractPresent(WindowsUniversalContract, 8);
-    auto win32ProgrammaticStyle = isWin32ProgrammaticPresent ? 0 : WS_DISABLED;
+	auto isWin32ProgrammaticPresent = winrt::ApiInformation::IsApiContractPresent(WindowsUniversalContract, 8);
+	auto win32ProgrammaticStyle = isWin32ProgrammaticPresent ? 0 : WS_DISABLED;
 
-    auto controls = util::StackPanel(m_window, instance, 10, 10, 40, 200, 30);
-    m_poseButton = controls.CreateControl(util::ControlType::Button, L"Pose Detection");
-    m_codeButton = controls.CreateControl(util::ControlType::Button, L"Code Detection");
-    m_stopButton = controls.CreateControl(util::ControlType::Button, L"Stop Capture", WS_DISABLED);
-    m_label = controls.CreateControl(util::ControlType::Label, L"Analysis");
+	auto controls = util::StackPanel(m_window, instance, 10, 10, 40, 200, 30);
+	m_poseButton = controls.CreateControl(util::ControlType::Button, L"Pose Detection");
+	m_codeButton = controls.CreateControl(util::ControlType::Button, L"Code Detection");
+	m_label = controls.CreateControl(util::ControlType::Label, L"Analysis");
 
-    auto messages = util::StackPanel(m_window, instance, 10, 10, 80, 200, 70);
-    messages.SetStepperOffsetY(150);
-    m_poseMsg  = messages.CreateControl(util::ControlType::Edit, L"Pose  ready for capture...", ES_MULTILINE | ES_READONLY);
-    m_codeMsg  = messages.CreateControl(util::ControlType::Edit, L"Code  ready for capture...", ES_MULTILINE | ES_READONLY);
-    m_voiceMsg = messages.CreateControl(util::ControlType::Edit, L"Voice ready for capture...", ES_MULTILINE | ES_READONLY);
-    SetWindowPos(m_poseMsg,  nullptr, 0, 0, 200, 70, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(m_codeMsg,  nullptr, 0, 0, 200, 70, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-    SetWindowPos(m_voiceMsg, nullptr, 0, 0, 200, 70, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+	auto messages = util::StackPanel(m_window, instance, 10, 10, 80, 200, 70);
+	messages.SetStepperOffsetY(110);
+	m_poseMsg = messages.CreateControl(util::ControlType::Edit, L"Pose ready for capture...", ES_MULTILINE | ES_READONLY);
+	m_codeMsg = messages.CreateControl(util::ControlType::Edit, L"Code / voice ready for capture...", ES_MULTILINE | ES_READONLY);
+	SetWindowPos(m_poseMsg, nullptr, 0, 0, 200, 70, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+	SetWindowPos(m_codeMsg, nullptr, 0, 0, 200, 70, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-    SendMessage(m_poseButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
-    SendMessage(m_codeButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
-    SendMessage(m_stopButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
-    SendMessage(m_label, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
-    SendMessage(m_poseMsg,  WM_SETFONT, (WPARAM)g_hFontText, TRUE);
-    SendMessage(m_codeMsg,  WM_SETFONT, (WPARAM)g_hFontText, TRUE);
-    SendMessage(m_voiceMsg, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
+	SendMessage(m_poseButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
+	SendMessage(m_codeButton, WM_SETFONT, (WPARAM)g_hFontButton, TRUE);
+	SendMessage(m_label, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
+	SendMessage(m_poseMsg, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
+	SendMessage(m_codeMsg, WM_SETFONT, (WPARAM)g_hFontText, TRUE);
 }
 
-int SampleWindow::SetSubTitle()
+void SampleWindow::SetSubTitle()
 {
-	int nActive = 0;
-    std::wstring titleText;
-    for (int idx = 0; idx < CaptureIndex::CAPTURE_LEN; ++idx)
-    {
-        titleText.append(CaptureName[idx]);
-        titleText.append(m_isCap[idx] ? L" ON  " : L" OFF  ");
-        nActive += m_isCap[idx];
+	std::wstring titleText;
+	for (int idx = 0; idx < CaptureIndex::CAPTURE_LEN; ++idx)
+	{
+		titleText.append(CaptureName[idx]);
+		titleText.append(m_isCap[idx] ? L" ON  " : L" OFF  ");
 	}
-    SetWindowTextW(m_window, titleText.c_str());
-    return nActive;
+	SetWindowTextW(m_window, titleText.c_str());
 }
 
 void SampleWindow::StopCapture(CaptureIndex idx)
 {
 	m_isCap[idx] = false;
-    m_app->StopCapture(idx);
-	if (SetSubTitle() == 0) EnableWindow(m_stopButton, false);
+	m_app->StopCapture(idx);
+	SetSubTitle();
 }
 
 void SampleWindow::OnCaptureItemClosedPose(winrt::GraphicsCaptureItem const&, winrt::IInspectable const&)
 {
-    StopCapture(CaptureIndex::POSE);
+	StopCapture(CaptureIndex::POSE);
 }
 
 void SampleWindow::OnCaptureItemClosedCount(winrt::GraphicsCaptureItem const&, winrt::IInspectable const&)
 {
-    StopCapture(CaptureIndex::CODE);
+	StopCapture(CaptureIndex::CODE);
 }

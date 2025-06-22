@@ -195,7 +195,7 @@ winrt::IAsyncOperation<bool> App::TakeSnapshotAsync(CaptureIndex idx)
 
 		if (abs(yaw) < 60 && abs(pitch) < 60) {
 			++m_totalPose;
-			if (abs(yaw) >= 15 || pitch < -10 || pitch > 25) {
+			if (abs(yaw) > 12 || pitch < -11 || pitch > 21) {
 				if (m_prevPoseSus) {
 					++m_susPose;
 					isSus = true;

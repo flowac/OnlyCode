@@ -10,6 +10,7 @@ import ImageIO
 extension MessageManager {
     static let shared = MessageManager()
 }
+
 var voiceURL = "http://104.52.63.66:7001"
 var poseURL  = "http://104.52.63.66:7002"
 var codeURL  = "http://104.52.63.66:7003"
@@ -47,6 +48,7 @@ class MessageManager: ObservableObject {
     @Published var codeStatus: String = "Idle"
     @Published var mainStatus: String = "Ready"
     @Published var poseStatus: String = "Idle"
+    @Published var buttonStatus: String = "Start Capture"
     
     func audio(_ status: String) {
         DispatchQueue.main.async {
@@ -72,11 +74,18 @@ class MessageManager: ObservableObject {
         }
     }
     
+    func button(_ status: String) {
+        DispatchQueue.main.async {
+            self.buttonStatus = status
+        }
+    }
+    
     func start() {
         self.audio("Starting...")
         self.code("Starting...")
         self.pose("Starting...")
         self.main("Recording Active")
+        self.button("Stop Capture")
     }
     
     func stop() {
@@ -86,6 +95,7 @@ class MessageManager: ObservableObject {
             self.code("Idle")
             self.pose("Idle")
             self.main("Ready")
+            self.button("Start Capture")
         }
     }
 }
@@ -94,6 +104,7 @@ struct ContentView: View {
     @ObservedObject private var mm = MessageManager.shared
     @State var audio = AudioRecorder()
     @State private var floatingManager = FloatingWindowManager()
+    @State private var isCap: Bool = false
     
     init() {
         mm.main(initURL())
@@ -119,32 +130,33 @@ struct ContentView: View {
                     floatingManager.showFloatingPicker()
                 }
                 
-                Button("Start Capture") {
-                    print("Starting capture")
-                    mm.start()
-                    
-                    startAud() { ret in
-                        mm.audio(ret)
+                Button(mm.buttonStatus) {
+                    if isCap {
+                        stopAud()
+                        stopCap()
+                        mm.stop()
+                        isCap = false
+                        print("Stopping capture")
+                    } else {
+                        print("Starting capture")
+                        mm.start()
+                        
+                        startAud() { ret in
+                            mm.audio(ret)
+                        }
+                        
+                        let codeWindow = floatingManager.getCodeWindow()
+                        let poseWindow = floatingManager.getPoseWindow()
+                        mm.code(codeWindow != nil ? "Active" : "Idle")
+                        mm.pose(poseWindow != nil ? "Active" : "Idle")
+                        isCap = true
+                        startCap()
                     }
-                    
-                    let codeWindow = floatingManager.getCodeWindow()
-                    let poseWindow = floatingManager.getPoseWindow()
-                    mm.code(codeWindow != nil ? "Active" : "Idle")
-                    mm.pose(poseWindow != nil ? "Active" : "Idle")
-                    startCap()
                 }
                 .buttonStyle(.borderedProminent)
-                
-                Button("Stop Capture") {
-                    stopAud()
-                    stopCap()
-                    mm.stop()
-                    print("Stopping capture")
-                }
-                .buttonStyle(.bordered)
             }
         }
-        .frame(width: 360, height: 240)
+        .frame(width: 300, height: 240)
         .padding()
         .onAppear {
             // Make window always on top

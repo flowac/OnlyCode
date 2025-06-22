@@ -55,7 +55,7 @@ func httpPost(url: String, fileName: String, completion: @escaping (String?) -> 
         }
         
         if let data = data, let text = String(data: data, encoding: .utf8) {
-            print("Response: \(text)")
+            //print("Response: \(text)")
             completion(text)
         } else {
             print("Encode Error")
@@ -63,4 +63,52 @@ func httpPost(url: String, fileName: String, completion: @escaping (String?) -> 
     }
     
     task.resume()
+}
+
+struct JsonParser {
+    private var doubles: [String: Double] = [:]
+    private var currentPath: [String] = []
+    
+    mutating func getDoubles(from input: String) -> [String: Double] {
+        doubles.removeAll()
+        currentPath.removeAll()
+        
+        do {
+            let jsonData = input.data(using: .utf8)
+            let jsonObject = try JSONSerialization.jsonObject(with: jsonData!)
+            traverse(jsonObject)
+        } catch {
+            var snip = String(input.prefix(20))
+            print("JSON parsing error: \(error) - \(snip)")
+            doubles.removeAll()
+        }
+        
+        return doubles
+    }
+    
+    private mutating func traverse(_ value: Any) {
+        switch value {
+        case let number as NSNumber:
+            // Convert ALL numeric values (int, float, double, bool) to Double
+            let path = currentPath.joined(separator: ".")
+            doubles[path] = number.doubleValue
+            
+        case let dict as [String: Any]:
+            for (key, val) in dict {
+                currentPath.append(key)
+                traverse(val)
+                currentPath.removeLast()
+            }
+            
+        case let array as [Any]:
+            for (index, val) in array.enumerated() {
+                currentPath.append("[\(index)]")
+                traverse(val)
+                currentPath.removeLast()
+            }
+            
+        default:
+            break
+        }
+    }
 }

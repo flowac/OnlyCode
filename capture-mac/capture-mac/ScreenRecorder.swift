@@ -21,7 +21,7 @@ enum CapType {
 
 // MARK: - Window Model
 struct WindowInfo: Identifiable, Hashable {
-    let id = UUID()
+    let id: CGWindowID
     let window: SCWindow
     let title: String
     let appName: String
@@ -29,6 +29,7 @@ struct WindowInfo: Identifiable, Hashable {
     var previewImage: NSImage?
     
     init(window: SCWindow) {
+        self.id = window.windowID
         self.window = window
         self.title = window.title ?? "Untitled Window"
         self.appName = window.owningApplication?.applicationName ?? "Unknown App"
@@ -46,9 +47,11 @@ struct WindowInfo: Identifiable, Hashable {
 
 // MARK: - Window Picker View
 struct WindowPickerView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var windows: [WindowInfo] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var triggerUpdate = 0
     
     private let minWidth: Int = 200
     private let minHeight: Int = 150
@@ -56,15 +59,13 @@ struct WindowPickerView: View {
     var body: some View {
         VStack(spacing: 20) {
             // Header
+            /*
             VStack(spacing: 8) {
-                Text("Window Screenshot")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
                 Text("Select a window to capture")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            */
             
             // Content
             if isLoading {
@@ -83,15 +84,18 @@ struct WindowPickerView: View {
                                 isSelectedPose: selectedPose?.id == windowInfo.id,
                                 onSelectCode: {
                                     selectedCode = windowInfo
+                                    triggerUpdate += 1
                                 },
                                 onSelectPose: {
                                     selectedPose = windowInfo
+                                    triggerUpdate += 1
                                 }
                             )
                         }
                     }
                     .padding()
                 }
+                .id(triggerUpdate)
             }
             
             // Bottom Controls
@@ -103,6 +107,11 @@ struct WindowPickerView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(isLoading)
+                
+                Button("Done Picking") {
+                    dismiss()
+                }
+                .buttonStyle(.bordered)
             }
             .padding(.horizontal)
             
@@ -124,11 +133,17 @@ struct WindowPickerView: View {
     private func loadWindows() async {
         isLoading = true
         errorMessage = nil
+        let nameFilter: Set<String> = ["capture-mac", "Desktop", "Dock", "Finder", "Music", "System Information", "Terminal", "Unknown", "Wallpaper"]
         
         do {
             let content = try await SCShareableContent.current
             let validWindows = content.windows.filter { window in
+                let appTitle = window.title ?? "Unknown"
+                let appName = window.owningApplication?.applicationName ?? "Unknown"
+                let skip = nameFilter.contains{ appName.hasPrefix($0) } || nameFilter.contains{ appTitle.hasPrefix($0) }
+                
                 guard window.owningApplication?.bundleIdentifier != nil,
+                      !skip,
                       window.isOnScreen,
                       Int(window.frame.width) >= minWidth,
                       Int(window.frame.height) >= minHeight else {
@@ -139,8 +154,7 @@ struct WindowPickerView: View {
             
             var windowInfos = validWindows.map { WindowInfo(window: $0) }
             
-            // Generate previews for first few windows
-            for i in 0..<min(windowInfos.count, 10) {
+            for i in 0..<windowInfos.count {
                 if let preview = await generatePreview(for: windowInfos[i].window) {
                     windowInfos[i].previewImage = preview
                 }
@@ -230,7 +244,7 @@ struct WindowCard: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(Color.clear, lineWidth: 2)
-                    //.stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke((isSelectedCode || isSelectedPose) ? Color.accentColor : Color.clear, lineWidth: 2)
             )
             
             // Window Info
@@ -253,13 +267,13 @@ struct WindowCard: View {
             
             // Action Buttons
             HStack(spacing: 8) {
-                Button(isSelectedCode ? "Selected for code" : "Select for code") {
+                Button(isSelectedCode ? "Selected code" : "Select for code") {
                     onSelectCode()
                 }
                 .buttonStyle(.bordered)
                 .disabled(isSelectedCode)
                 
-                Button(isSelectedPose ? "Selected for pose" : "Select for pose") {
+                Button(isSelectedPose ? "Selected pose" : "Select for pose") {
                     onSelectPose()
                 }
                 .buttonStyle(.bordered)
@@ -338,16 +352,16 @@ class ScreenshotCaptureOutput: NSObject, SCStreamOutput {
 func startCap() {
     stopCap()
     
-    if selectedCode != nil {
-        codeTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+    codeTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+        if selectedCode != nil {
             Task {
                 await captureWindow(selectedCode!, type: CapType.code)
             }
         }
     }
     
-    if selectedPose != nil {
-        poseTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+    poseTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+        if selectedPose != nil {
             Task {
                 await captureWindow(selectedPose!, type: CapType.pose)
             }
@@ -386,6 +400,14 @@ func captureWindow(_ windowInfo: WindowInfo, type: CapType) async {
     }
 }
 
+var prevCodeSus: Bool = false
+var prevCodeCount: Int = 0
+var totalCode: Int = 1
+var susCode: Int = 0
+var prevPoseSus: Bool = false
+var totalPose: Int = 1
+var susPose: Int = 0
+
 func saveToDesktop(image: CGImage, type: CapType) {
     var output = image
     var filename = "cap.png"
@@ -411,15 +433,65 @@ func saveToDesktop(image: CGImage, type: CapType) {
             switch type {
             case .code:
                 httpPost(url: codeURL, fileName: fileURL.path) { result in
-                    if result != nil {
-                        MessageManager.shared.code(result!)
+                    if result == nil {
+                        MessageManager.shared.code("Failed to process word per minute")
+                        return
                     }
+                    
+                    var jp = JsonParser()
+                    let rmap = jp.getDoubles(from: result!)
+                    if rmap.isEmpty {
+                        MessageManager.shared.code("Failed to process word per minute")
+                        return
+                    }
+                    
+                    let curr = Int(rmap["value"] ?? 0)
+                    let diff = curr - prevCodeCount
+                    prevCodeCount = curr
+                    
+                    if diff > 0 && diff < 30 {
+                        totalCode += 1
+                        if diff >= 7 {
+                            if prevCodeSus {
+                                susCode += 1
+                            }
+                            prevCodeSus = true
+                        } else {
+                            prevCodeSus = false
+                        }
+                    }
+                    print("sus:\(100 * susCode / totalCode)  wpm:\(diff * 6)  wc:\(curr)")
+                    MessageManager.shared.code("\(100 * susCode / totalCode)% sus, \(diff * 6) words per minute")
                 }
             case .pose:
                 httpPost(url: poseURL, fileName: fileURL.path) { result in
-                    if result != nil {
-                        MessageManager.shared.pose(result!)
+                    if result == nil {
+                        MessageManager.shared.pose("Failed to process pose")
                     }
+                    
+                    var jp = JsonParser()
+                    let rmap = jp.getDoubles(from: result!)
+                    if rmap.isEmpty {
+                        MessageManager.shared.pose("Failed to process pose")
+                        return
+                    }
+                    
+                    let pitch = Int(rmap["head_pose_angles.pitch"] ?? 100)
+                    let yaw = Int(rmap["head_pose_angles.yaw"] ?? 100)
+                    
+                    if abs(yaw) < 60 && abs(pitch) < 60 {
+                        totalPose += 1
+                        if abs(yaw) > 11 || pitch < -10 || pitch > 20 {
+                            if prevPoseSus {
+                                susPose += 1
+                            }
+                            prevPoseSus = true
+                        } else {
+                            prevPoseSus = false
+                        }
+                    }
+                    print("sus:\(100 * susPose / totalPose)  pitch:\(pitch)  yaw:\(yaw)")
+                    MessageManager.shared.pose("\(100 * susPose / totalPose)% sus, \(yaw)° yaw, \(pitch)° pitch")
                 }
             }
         } catch {
@@ -509,7 +581,7 @@ class FloatingWindowManager: ObservableObject {
         )
         
         picker.isReleasedWhenClosed = false
-        picker.title = "Window Picker - Floating"
+        picker.title = "Select Windows For Capture"
         picker.contentView = NSHostingView(rootView:
             WindowPickerView()
                 .background(Color(NSColor.windowBackgroundColor))

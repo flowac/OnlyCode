@@ -16,6 +16,28 @@ var timeLimit = 60.0
 var audioRuntime: TimeInterval = timeLimit
 var audioRestart: TimeInterval = timeLimit + 1.0
 
+var totalDP = 0
+let tierCount = 4
+var density = [Int](repeating: 0, count: 4)
+var impact  = [Int](repeating: 0, count: 4)
+let tierThreshold = 10
+
+func commsScore() -> Int {
+    if totalDP == 0 { return 0 }
+    
+    var maxDensity = 0
+    var maxImpact = 0
+    for i in 1..<tierCount {
+        if 100 * density[i] / totalDP > tierThreshold {
+            maxDensity = i
+        }
+        if 100 * impact[i] / totalDP > tierThreshold {
+            maxImpact = i
+        }
+    }
+    return max(0, maxDensity + maxImpact - 1)
+}
+
 class AudioRecorder: NSObject {
     private let session = AVCaptureSession()
     private var audioFileOutput: AVAudioFile?
@@ -24,7 +46,7 @@ class AudioRecorder: NSObject {
         .appendingPathComponent("output.wav")
     let mp3outURL = FileManager.default.temporaryDirectory
         .appendingPathComponent("output.mp3")
-
+    
     func startRecording() -> Bool {
         let devices = AVCaptureDevice.devices(for: .audio)
         for device in devices {
@@ -105,13 +127,32 @@ class AudioRecorder: NSObject {
         
         httpPost(url: voiceURL, fileName: mp3outURL.path) { result in
             if result != nil {
-                MessageManager.shared.audio(result!)
+                var jp = JsonParser()
+                let rmap = jp.getDoubles(from: result!)
+                let cd = Int(rmap["density"] ?? 0)
+                let ci = Int(rmap["impact"] ?? 0)
+                var score = 0
+                
+                if cd > 0 && cd < tierCount && ci > 0 && ci < tierCount {
+                    totalDP += 1
+                    density[cd] += 1
+                    impact[ci] += 1
+                    score = commsScore()
+                }
+                print("Score(1-5): \(score), Density: \(cd), Impact: \(ci), Samples: \(totalDP)")
+                print("Density \(density[0]), \(density[1]), \(density[2]), \(density[3])")
+                print("Impact  \(impact[0]), \(impact[1]), \(impact[2]), \(impact[3])")
+                MessageManager.shared.audio("Score: \(score)/5, Density: \(cd), Impact: \(ci)")
+            } else {
+                MessageManager.shared.audio("Failed to process audio")
             }
         }
     }
 }
 
 func startAud(completion: @escaping (String) -> Void) {
+    stopAud()
+    
     startTimer = Timer.scheduledTimer(withTimeInterval: audioRestart, repeats: true) { _ in
         let rec = AudioRecorder()
         var status = "Failed to record audio"

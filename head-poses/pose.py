@@ -36,9 +36,9 @@ class pose:
         ret = {}
 
         # Extract blendshapes
-        for fbs in detection_result.face_blendshapes[0]:
-            if fbs.score >= self.pose_thres:
-                ret[fbs.category_name] = fbs.score
+        #for fbs in detection_result.face_blendshapes[0]:
+        #    if fbs.score >= self.pose_thres:
+        #        ret[fbs.category_name] = fbs.score
 
         # Extract transformation matrix and compute yaw/pitch/roll
         if detection_result.facial_transformation_matrixes:

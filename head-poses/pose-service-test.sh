@@ -1,6 +1,7 @@
-set -x
 DEST="127.0.0.1"
 PORT="7002"
+
+FLIST=(data/*)
 
 if [ $# -ge 1 ]; then
     DEST=$1
@@ -9,9 +10,12 @@ if [ $# -ge 1 ]; then
     fi
 fi
 
-sleep 0.2; curl -X GET $DEST:$PORT
-sleep 0.2; curl -X POST -F "file=@data/image.jpg" $DEST:$PORT
-sleep 0.2; curl -X POST -F "file=@data/image.png" $DEST:$PORT
-sleep 0.2; curl -X POST -F "file=@data/badname" $DEST:$PORT
-sleep 0.2; curl -X POST -F "file=@data/bad.png" $DEST:$PORT
+curl -X GET $DEST:$PORT
+echo
+
+for FNAME in ${FLIST[@]}; do
+    sleep 0.1
+    (set -x; curl -X POST -F "file=@$FNAME" $DEST:$PORT)
+    echo
+done
 

@@ -14,5 +14,5 @@ class count:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         text = pytesseract.image_to_string(gray, config="--oem 3 --psm 11")
 
-        return len(text.split())
+        return len(text) // 8
 

@@ -44,6 +44,7 @@ docker push alien222222/onlycode:x86
 ```
 
 ### AWS Quick Start (no docker due to storage limit)
+```
 sudo apt update; sudo apt upgrade -y
 sudo apt install -y ffmpeg git python3-pip tesseract-ocr
 sudo apt install -y python3.12-venv
@@ -54,8 +55,8 @@ cat /home/ubuntu/.ssh/id_ed25519.pub
 sudo reboot now
 
 pip3 install mediapipe tf-keras transformers torch openai-whisper pytesseract flask waitress
-git clone git@github.com:flowac/OnlyCode.git; cd OnlyCode; git pull
+git -c http.sslVerify=false clone git@github.com:flowac/OnlyCode.git; cd OnlyCode; git pull
 (cd /home/ubuntu/OnlyCode/head-poses/; nohup python3 pose-service.py &)
 (cd /home/ubuntu/OnlyCode/image/; nohup python3 count-service.py &)
 (cd /home/ubuntu/OnlyCode/voice/; nohup python3 voice-service.py &)
-
+```

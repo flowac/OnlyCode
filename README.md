@@ -1,9 +1,9 @@
 ## Quick Checks
-| Dir | Command (Alan's Web Services) |
+| Directory | Command (Alan's Web Services) `HOST=104.52.63.66` |
 | --- | --- |
-| head-poses | curl -X POST -F file=@head-poses/data/image.jpg 104.52.63.66:7002 |
-| image | curl -X POST -F file=@image/data/test1.png 104.52.63.66:7003 |
-| voice | curl -X POST -F file=@voice/data/terry.mp3 104.52.63.66:7001 |
+| head-poses | curl -X POST -F file=@head-poses/data/straight.png $HOST:7002 |
+| image | curl -X POST -F file=@image/data/code.png $HOST:7003 |
+| voice | curl -X POST -F file=@voice/data/terry.mp3 $HOST:7001 |
 
 
 ## Setup

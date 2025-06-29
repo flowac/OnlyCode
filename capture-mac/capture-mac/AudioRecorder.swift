@@ -133,6 +133,14 @@ class AudioRecorder: NSObject {
                 let ci = Int(rmap["impact"] ?? 0)
                 var score = 0
                 
+                var impacttext = "N/A"
+                switch ci {
+                case 1: impacttext = "Low"
+                case 2: impacttext = "Medium"
+                case 3: impacttext = "High"
+                default: impacttext = "Out of Range"
+                }
+                
                 if cd > 0 && cd < tierCount && ci > 0 && ci < tierCount {
                     totalDP += 1
                     density[cd] += 1
@@ -142,7 +150,7 @@ class AudioRecorder: NSObject {
                 print("Score(1-5): \(score), Density: \(cd), Impact: \(ci), Samples: \(totalDP)")
                 print("Density \(density[0]), \(density[1]), \(density[2]), \(density[3])")
                 print("Impact  \(impact[0]), \(impact[1]), \(impact[2]), \(impact[3])")
-                MessageManager.shared.audio("Score: \(score)/5, Density: \(cd), Impact: \(ci)")
+                MessageManager.shared.audio("Score: \(score)/5  Impact: \(impacttext)")
             } else {
                 MessageManager.shared.audio("Failed to process audio")
             }

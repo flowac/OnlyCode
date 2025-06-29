@@ -449,6 +449,7 @@ func saveToDesktop(image: CGImage, type: CapType) {
                     let diff = curr - prevCodeCount
                     prevCodeCount = curr
                     
+                    var wpmtext = "N/A"
                     if diff > 0 && diff < 30 {
                         totalCode += 1
                         if diff >= 7 {
@@ -456,12 +457,14 @@ func saveToDesktop(image: CGImage, type: CapType) {
                                 susCode += 1
                             }
                             prevCodeSus = true
+                            wpmtext = "suspicious"
                         } else {
                             prevCodeSus = false
+                            wpmtext = "normal"
                         }
                     }
                     print("sus:\(100 * susCode / totalCode)  wpm:\(diff * 6)  wc:\(curr)")
-                    MessageManager.shared.code("\(100 * susCode / totalCode)% sus, \(diff * 6) words per minute")
+                    MessageManager.shared.code("\(100 * susCode / totalCode)% suspicious. Currently \(wpmtext).")
                 }
             case .pose:
                 httpPost(url: poseURL, fileName: fileURL.path) { result in
@@ -479,6 +482,7 @@ func saveToDesktop(image: CGImage, type: CapType) {
                     let pitch = Int(rmap["head_pose_angles.pitch"] ?? 100)
                     let yaw = Int(rmap["head_pose_angles.yaw"] ?? 100)
                     
+                    var posetext = "N/A"
                     if abs(yaw) < 60 && abs(pitch) < 60 {
                         totalPose += 1
                         if abs(yaw) > 11 || pitch < -10 || pitch > 20 {
@@ -486,12 +490,14 @@ func saveToDesktop(image: CGImage, type: CapType) {
                                 susPose += 1
                             }
                             prevPoseSus = true
+                            posetext = "suspicious"
                         } else {
                             prevPoseSus = false
+                            posetext = "normal"
                         }
                     }
                     print("sus:\(100 * susPose / totalPose)  pitch:\(pitch)  yaw:\(yaw)")
-                    MessageManager.shared.pose("\(100 * susPose / totalPose)% sus, \(yaw)° yaw, \(pitch)° pitch")
+                    MessageManager.shared.pose("\(100 * susPose / totalPose)% suspicious. Currently \(posetext).")
                 }
             }
         } catch {

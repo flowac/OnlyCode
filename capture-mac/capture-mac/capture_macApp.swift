@@ -12,7 +12,7 @@ struct capture_macApp: App {
     let persistenceController = PersistenceController.shared
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup("OnlyCode.cc") {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }

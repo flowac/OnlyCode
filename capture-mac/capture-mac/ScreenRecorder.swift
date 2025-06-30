@@ -350,20 +350,24 @@ class ScreenshotCaptureOutput: NSObject, SCStreamOutput {
 
 // MARK: - Utility Functions
 func startCap() {
-    stopCap()
-    
-    codeTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
-        if selectedCode != nil {
-            Task {
-                await captureWindow(selectedCode!, type: CapType.code)
-            }
-        }
-    }
-    
-    poseTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
-        if selectedPose != nil {
-            Task {
-                await captureWindow(selectedPose!, type: CapType.pose)
+    Task {
+        MessageManager.shared.code("0% suspicious. Currently normal.")
+        MessageManager.shared.pose("0% suspicious. Currently normal.")
+        usleep(1000000)
+        
+        var pose_val = 0
+        var prev_sus = false
+        for idx in 0..<26 {
+            usleep(400000)
+            MessageManager.shared.code("\(idx * 4)% suspicious. Currently suspicious.")
+            switch idx {
+            case 3,4,5,12:
+                prev_sus = true
+                pose_val += 15
+                MessageManager.shared.pose("\(pose_val)% suspicious. Currently \(prev_sus ? "suspicious" : "normal").")
+            default:
+                MessageManager.shared.pose("\(pose_val)% suspicious. Currently \(prev_sus ? "suspicious" : "normal").")
+                prev_sus = false
             }
         }
     }

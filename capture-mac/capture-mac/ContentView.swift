@@ -145,10 +145,12 @@ struct ContentView: View {
                             mm.audio(ret)
                         }
                         
+                        /*
                         let codeWindow = floatingManager.getCodeWindow()
                         let poseWindow = floatingManager.getPoseWindow()
                         mm.code(codeWindow != nil ? "Active" : "Idle")
                         mm.pose(poseWindow != nil ? "Active" : "Idle")
+                         */
                         isCap = true
                         startCap()
                     }

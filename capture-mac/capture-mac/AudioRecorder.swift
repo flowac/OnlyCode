@@ -159,6 +159,8 @@ class AudioRecorder: NSObject {
 }
 
 func startAud(completion: @escaping (String) -> Void) {
+    completion("Recording")
+    
     stopAud()
     
     startTimer = Timer.scheduledTimer(withTimeInterval: audioRestart, repeats: true) { _ in
@@ -176,8 +178,8 @@ func startAud(completion: @escaping (String) -> Void) {
 
 func stopAud() {
     startTimer?.invalidate()
-    stopTimer?.fire()
-    usleep(200000) // sleep 200ms
+    //stopTimer?.fire()
+    //usleep(200000) // sleep 200ms
     stopTimer?.invalidate()
 }
 

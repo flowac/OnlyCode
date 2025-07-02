@@ -266,7 +266,7 @@
 
     /* Features Section */
     .features {
-      padding: 6rem 2rem;
+      padding: 3rem 2rem 6rem;
     }
 
     .section-title {
@@ -323,13 +323,14 @@
     }
 
     .feature p {
+      text-align: justify;
       line-height: 1.6;
       opacity: 0.9;
     }
 
-    /* New Features */
+    /* Demo Section */
     .demo-section {
-      padding: 6rem 2rem;
+      padding: 3rem 2rem 6rem;
       background: rgba(255, 255, 255, 0.02);
     }
 
@@ -370,8 +371,9 @@
       transform: scale(1.1);
     }
 
+    /* Pricing Section */
     .pricing {
-      padding: 6rem 2rem;
+      padding: 3rem 2rem 6rem;
     }
 
     .pricing-grid {
@@ -491,14 +493,125 @@
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
+@media (max-width: 768px) {
       .hero h1 { font-size: 3rem; }
       .hero p { font-size: 1.1rem; }
       .cta-buttons { flex-direction: column; align-items: center; }
       .features-grid { grid-template-columns: 1fr; }
+      .job-header { flex-direction: column; }
       nav ul { display: none; }
     }
-  </style>
+
+/* Shift section upward slightly (~0.5cm / ~19px) */
+#pricing, #demo, #features, #careers, #home {
+  scroll-margin-top: -19px !important;
+  padding-top: 0 !important;
+}
+
+/* Keep section titles tight to top */
+.section-title {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+
+/* Responsive hamburger menu */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+}
+.nav-toggle span {
+  width: 25px;
+  height: 3px;
+  background: white;
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  nav ul {
+    display: none;
+    flex-direction: column;
+    background: rgba(10, 14, 26, 0.95);
+    position: absolute;
+    top: 60px;
+    right: 2rem;
+    width: 200px;
+    padding: 1rem;
+    border-radius: 10px;
+    z-index: 1001;
+  }
+
+  nav ul.show {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .hero h1 { font-size: 2.2rem; }
+  .hero p { font-size: 1rem; }
+
+  .features-grid,
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pricing-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .job-header {
+    flex-direction: column;
+  }
+}
+
+/* Scroll-synced animated cards */
+.status-cards {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 3rem auto 4rem;
+  padding: 0 1rem;
+  max-width: 1000px;
+  flex-wrap: wrap;
+}
+.analyze-card {
+  flex: 0 0 300px;
+  max-width: 300px;
+  transform: translateY(30px);
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: none;
+}
+.analyze-card h3 {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #00c6dc;
+}
+.analyze-card img {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .status-cards {
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1rem;
+  }
+  .analyze-card {
+    max-width: 90vw;
+    width: 100%;
+    flex: 1 1 auto;
+  }
+}
+
+</style>
 </head>
 <body>
   <div class="bg-animation"></div>
@@ -507,13 +620,18 @@
   <header>
     <div class="nav-container">
       <div class="logo">OnlyCode</div>
-      <nav>
+      <div class="nav-toggle" id="navToggle">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+<nav>
         <ul>
           <li><a href="#home">Home</a></li>
           <li><a href="#features">Features</a></li>
           <li><a href="#demo">Demo</a></li>
+          <li><a href="careers.html">Careers</a></li>
           <li><a href="#pricing">Pricing</a></li>
-          <!--<li><a href="#contact">Contact</a></li>-->
         </ul>
       </nav>
     </div>
@@ -521,10 +639,10 @@
 
   <section class="hero" id="home">
     <h1>AI-Powered Interview Revolution</h1>
-    <p>Transform your hiring process with OnlyCode's advanced AI that analyzes behavior, speech patterns, and engagement to provide unbiased, data-driven candidate evaluations.</p>
+    <p>Transform your hiring process with OnlyCode's advanced AI integration that analyzes: behaviors, eye movement, and engagement patterns to provide conclusive and accurate evaluations.</p>
     <div class="cta-buttons">
       <a href="#demo" class="btn btn-primary">Watch Demo</a>
-      <a href="#pricing" class="btn btn-secondary">Start Free Trial</a>
+      <a href="#pricing" class="btn btn-secondary">Request a Demo</a>
     </div>
   </section>
 
@@ -542,14 +660,37 @@
         <span class="stat-number" style="--num: 78">78%</span>
         <div class="stat-label">Time Saved</div>
       </div>
-      <!--
-	  <div class="stat">
-        <span class="stat-number" style="--num: 500">500+</span>
-        <div class="stat-label">Companies Trust Us</div>
-      </div>
-	  -->
     </div>
   </section>
+
+  <section class="demo-section" id="demo" style="margin-top: 6rem;">
+    <div class="demo-container">
+      <h2 class="section-title">See OnlyCode in Action</h2>
+      <p style="font-size: 1.2rem; margin-bottom: 0.5rem; opacity: 0.9;">Watch how our AI analyzes interviews in real-time</p>
+      <div class="demo-video">
+        <div class="play-button">▶️</div>
+      </div>
+      <p style="opacity: 0.8;">Experience the future of interview assessment technology</p>
+    </div>
+  </section>
+
+<section class="status-cards">
+<div class="features-grid">
+  <div class="analyze-card" data-delay="0">
+    <img src="assets/idle.png" alt="Locally Hosted Solutions Available">
+	<h3>Local Hosting Available</h3>
+  </div>
+  <div class="analyze-card" data-delay="1">
+    <img src="assets/running.png" alt="Eye Tracking + Typing Pattern Analysis">
+	<h3>Eye Tracking + Typing Analysis</h3>
+  </div>
+  <div class="analyze-card" data-delay="2">
+    <img src="assets/done.png" alt="Verbal Communication Analysis">
+	<h3>Verbal Communication Analysis</h3>
+  </div>
+</div>
+</section>
+
 
   <section class="features" id="features">
     <h2 class="section-title">Advanced AI Features</h2>
@@ -587,17 +728,6 @@
     </div>
   </section>
 
-  <section class="demo-section" id="demo">
-    <div class="demo-container">
-      <h2 class="section-title">See OnlyCode in Action</h2>
-      <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">Watch how our AI analyzes interviews in real-time</p>
-      <div class="demo-video">
-        <div class="play-button">▶️</div>
-      </div>
-      <p style="opacity: 0.8;">Experience the future of interview assessment technology</p>
-    </div>
-  </section>
-
   <section class="pricing" id="pricing">
     <h2 class="section-title">Choose Your Plan</h2>
     <div class="pricing-grid">
@@ -610,7 +740,7 @@
           <li>Standard reports</li>
           <li>Email support</li>
         </ul>
-        <a href="#" class="btn btn-secondary">Contact Sales</a>
+        <button class="btn btn-secondary contact-sales-btn" id="btn1">Request a Demo</button>
       </div>
       <div class="pricing-card featured">
         <h3>Professional</h3>
@@ -621,7 +751,7 @@
           <li>Priority support</li>
           <li>Custom scoring criteria</li>
         </ul>
-        <a href="#" class="btn btn-primary">Contact Sales</a>
+        <button class="btn btn-secondary contact-sales-btn" id="btn2">Contact Sales</button>
       </div>
       <div class="pricing-card">
         <h3>Enterprise</h3>
@@ -632,50 +762,16 @@
           <li>24/7 dedicated support</li>
           <li>Custom integrations</li>
         </ul>
-        <a href="#" class="btn btn-secondary">Contact Sales</a>
+        <button class="btn btn-secondary contact-sales-btn" id="btn3">Contact Sales</button>
       </div>
     </div>
   </section>
 
-<!--
-  <footer id="contact">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h4>Product</h4>
-        <a href="#">Features</a>
-        <a href="#">Pricing</a>
-        <a href="#">API</a>
-        <a href="#">Integrations</a>
-      </div>
-      <div class="footer-section">
-        <h4>Company</h4>
-        <a href="#">About Us</a>
-        <a href="#">Careers</a>
-        <a href="#">Blog</a>
-        <a href="#">Press</a>
-      </div>
-      <div class="footer-section">
-        <h4>Support</h4>
-        <a href="#">Help Center</a>
-        <a href="#">Contact</a>
-        <a href="#">Documentation</a>
-        <a href="#">Status</a>
-      </div>
-      <div class="footer-section">
-        <h4>Legal</h4>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Security</a>
-        <a href="#">GDPR</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2025 OnlyCode. All rights reserved. | Revolutionizing interviews with AI</p>
-    </div>
-  </footer>
--->
-
   <script>
+	document.getElementById('btn1').onclick = function() {this.textContent = 'info@onlycode.cc';};
+	document.getElementById('btn2').onclick = function() {this.textContent = 'info@onlycode.cc';};
+	document.getElementById('btn3').onclick = function() {this.textContent = 'info@onlycode.cc';};
+
     // Create floating particles
     function createParticles() {
       const particlesContainer = document.getElementById('particles');
@@ -775,6 +871,60 @@
     document.querySelector('.play-button').addEventListener('click', function() {
       alert('Demo video would play here! 🎬\n\nThis would showcase:\n• Real-time AI analysis\n• Eye tracking visualization\n• Behavioral scoring\n• Interview insights');
     });
-  </script>
+  
+// Mobile nav toggle
+document.getElementById('navToggle').addEventListener('click', function () {
+  document.querySelector('nav ul').classList.toggle('show');
+});
+
+// Real-time scroll-synced Y transform based on viewport entry
+function updateScrollLinkedCards() {
+  const cards = document.querySelectorAll('.analyze-card');
+  const viewportHeight = window.innerHeight;
+
+  cards.forEach((card, index) => {
+    const rect = card.getBoundingClientRect();
+    const cardCenter = rect.top + rect.height / 2;
+    const progress = 1 - Math.min(Math.max(cardCenter / viewportHeight, 0), 1);
+    const translateY = 50 * (1 - progress); // from 50px to 0px
+    const opacity = progress;
+
+    card.style.transform = `translateY(${translateY}px)`;
+    card.style.opacity = opacity;
+  });
+}
+
+window.addEventListener("scroll", () => requestAnimationFrame(updateScrollLinkedCards));
+window.addEventListener("load", updateScrollLinkedCards);
+
+// Scroll-up animation: image cards slide into place and become visible just as they enter view
+document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".analyze-card");
+  const container = document.querySelector(".status-cards");
+
+  function updateCardScrollAnimation() {
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const triggerStart = viewportHeight;
+    const triggerEnd = viewportHeight * 0.5;
+
+    let progress = (triggerStart - rect.top) / (triggerStart - triggerEnd);
+    progress = Math.min(Math.max(progress, 0), 1);
+
+    const translateY = 30 * (1 - progress); // slide up from 30px to 0px
+    const opacity = 0.3 + 0.7 * progress;   // fade from 0.3 to 1.0
+
+    cards.forEach(card => {
+      card.style.transform = `translateY(${translateY}px)`;
+      card.style.opacity = opacity;
+    });
+  }
+
+  window.addEventListener("scroll", () => requestAnimationFrame(updateCardScrollAnimation));
+  window.addEventListener("load", updateCardScrollAnimation);
+});
+
+</script>
 </body>
 </html>

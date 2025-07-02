@@ -323,7 +323,6 @@
     }
 
     .feature p {
-      text-align: justify;
       line-height: 1.6;
       opacity: 0.9;
     }
@@ -502,18 +501,15 @@
       nav ul { display: none; }
     }
 
-/* Shift section upward slightly (~0.5cm / ~19px) */
-#pricing, #demo, #features, #careers, #home {
-  scroll-margin-top: -19px !important;
-  padding-top: 0 !important;
+/* Shift section down slightly */
+#home {
+  scroll-margin-top: 20px !important;
+  padding-top: 20 !important;
 }
-
-/* Keep section titles tight to top */
-.section-title {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
+#pricing, #demo, #features {
+  scroll-margin-top: 40px !important;
+  padding-top: 40 !important;
 }
-
 
 /* Responsive hamburger menu */
 .nav-toggle {

@@ -370,6 +370,9 @@ func startCap() {
                 prev_sus = false
             }
         }
+        
+        usleep(500000)
+        MessageManager.shared.main("Recording Complete")
     }
 }
 

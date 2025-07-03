@@ -111,26 +111,30 @@ struct ContentView: View {
     }
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 40) {
             // Main status display
             Text(mm.mainStatus)
-                .font(.headline)
+                .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.primary)
             
             // Status text boxes
-            VStack(spacing: 12) {
+            VStack(spacing: 24) {
                 StatusBox(title: "Verbal Communication Analysis", status: mm.audioStatus, color: .blue)
                 StatusBox(title: "Typing Pattern Analysis", status: mm.codeStatus, color: .orange)
                 StatusBox(title: "Head Pose Analysis", status: mm.poseStatus, color: .green)
             }
             
             // Control buttons
-            HStack(spacing: 15) {
-                Button("Window Picker") {
+            HStack(spacing: 30) {
+                Button() {
                     floatingManager.showFloatingPicker()
+                } label: {
+                    Text("Window Picker")
+                        .padding(7)
                 }
+                .font(.system(size: 22, weight: .semibold))
                 
-                Button(mm.buttonStatus) {
+                Button() {
                     if isCap {
                         stopAud()
                         stopCap()
@@ -154,11 +158,15 @@ struct ContentView: View {
                         isCap = true
                         startCap()
                     }
+                } label: {
+                    Text(mm.buttonStatus)
+                        .padding(7)
                 }
                 .buttonStyle(.borderedProminent)
+                .font(.system(size: 22, weight: .semibold))
             }
         }
-        .frame(width: 300, height: 240)
+        .frame(width: 600, height: 480)
         .padding()
         .onAppear {
             // Make window always on top
@@ -180,26 +188,26 @@ struct StatusBox: View {
         HStack {
             Circle()
                 .fill(color)
-                .frame(width: 8, height: 8)
+                .frame(width: 16, height: 16)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.caption)
+                    .font(.system(size: 22, design: .monospaced))
                     .foregroundColor(.secondary)
                 Text(status)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 22, design: .monospaced))
                     .foregroundColor(.primary)
             }
             
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
         .background(Color(.controlBackgroundColor))
-        .cornerRadius(6)
+        .cornerRadius(12)
         .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color(.separatorColor), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separatorColor), lineWidth: 1)
         )
     }
 }

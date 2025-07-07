@@ -334,40 +334,9 @@
     }
 
     .demo-container {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       text-align: center;
-    }
-
-    .demo-video {
-      width: 100%;
-      max-width: 800px;
-      height: 450px;
-      background: linear-gradient(45deg, #1a1f2e, #2a3547);
-      border-radius: 20px;
-      margin: 2rem auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid rgba(58, 141, 221, 0.3);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .play-button {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(45deg, #3a8ddd, #00c6dc);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .play-button:hover {
-      transform: scale(1.1);
     }
 
     /* Pricing Section */
@@ -565,21 +534,9 @@
 }
 
 /* Scroll-synced animated cards */
-.status-cards {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin: 3rem auto 4rem;
-  padding: 0 1rem;
-  max-width: 1000px;
-  flex-wrap: wrap;
-}
 .analyze-card {
-  flex: 0 0 300px;
-  max-width: 300px;
-  transform: translateY(30px);
-  opacity: 0;
-  will-change: transform, opacity;
+  flex: 0 0 400px;
+  max-width: 400px;
   transition: none;
 }
 .analyze-card h3 {
@@ -595,11 +552,6 @@
 }
 
 @media (max-width: 768px) {
-  .status-cards {
-    flex-direction: column;
-    align-items: center;
-    padding: 0 1rem;
-  }
   .analyze-card {
     max-width: 90vw;
     width: 100%;
@@ -626,8 +578,8 @@
           <li><a href="#home">Home</a></li>
           <li><a href="#features">Features</a></li>
           <li><a href="#demo">Demo</a></li>
-          <li><a href="careers.html">Careers</a></li>
           <li><a href="#pricing">Pricing</a></li>
+          <li><a href="careers.html">Careers</a></li>
         </ul>
       </nav>
     </div>
@@ -635,13 +587,14 @@
 
   <section class="hero" id="home">
     <h1>AI-Powered Interview Revolution</h1>
-    <p>Transform your hiring process with OnlyCode's advanced AI integration that analyzes: behaviors, eye movement, and engagement patterns to provide conclusive and accurate evaluations.</p>
+    <p>Transform your hiring process with OnlyCode's advanced AI integration that analyzes: behaviors, head movement, and engagement patterns to provide conclusive and accurate evaluations.</p>
     <div class="cta-buttons">
       <a href="#demo" class="btn btn-primary">Watch Demo</a>
       <a href="#pricing" class="btn btn-secondary">Request a Demo</a>
     </div>
   </section>
 
+<!--
   <section class="stats">
     <div class="stats-container">
       <div class="stat">
@@ -658,35 +611,7 @@
       </div>
     </div>
   </section>
-
-  <section class="demo-section" id="demo" style="margin-top: 6rem;">
-    <div class="demo-container">
-      <h2 class="section-title">See OnlyCode in Action</h2>
-      <p style="font-size: 1.2rem; margin-bottom: 0.5rem; opacity: 0.9;">Watch how our AI analyzes interviews in real-time</p>
-      <div class="demo-video">
-        <div class="play-button">▶️</div>
-      </div>
-      <p style="opacity: 0.8;">Experience the future of interview assessment technology</p>
-    </div>
-  </section>
-
-<section class="status-cards">
-<div class="features-grid">
-  <div class="analyze-card" data-delay="0">
-    <img src="assets/idle.png" alt="Locally Hosted Solutions Available">
-	<h3>Local Hosting Available</h3>
-  </div>
-  <div class="analyze-card" data-delay="1">
-    <img src="assets/running.png" alt="Eye Tracking + Typing Pattern Analysis">
-	<h3>Eye Tracking + Typing Analysis</h3>
-  </div>
-  <div class="analyze-card" data-delay="2">
-    <img src="assets/done.png" alt="Verbal Communication Analysis">
-	<h3>Verbal Communication Analysis</h3>
-  </div>
-</div>
-</section>
-
+-->
 
   <section class="features" id="features">
     <h2 class="section-title">Advanced AI Features</h2>
@@ -721,7 +646,38 @@
         <h3>Instant Reports</h3>
         <p>Generate comprehensive candidate reports within minutes, including strengths, areas for improvement, and hiring recommendations.</p>
       </div>
+	  
+	  <div class="fade-in analyze-card">
+		<img src="assets/idle.png" alt="Locally Hosted Solutions Available">
+		<h3>Local Hosting Available</h3>
+	  </div>
+	  <div class="fade-in analyze-card">
+		<img src="assets/running.png" alt="Eye Tracking + Typing Pattern Analysis">
+		<h3>Eye Tracking + Typing Analysis</h3>
+	  </div>
+	  <div class="fade-in analyze-card">
+		<img src="assets/done.png" alt="Verbal Communication Analysis">
+		<h3>Verbal Communication Analysis</h3>
+	  </div>
     </div>
+  </section>
+
+  <section class="demo-section" id="demo" style="margin-top: 6rem;">
+    <div class="demo-container">
+      <h2 class="section-title">See OnlyCode in Action</h2>
+		<div class="video-wrapper">
+			<iframe src="https://www.youtube.com/embed/xJ4j7e8lJmA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+		</div>
+      <p style="font-size: 1.2rem; margin-bottom: 0.5rem; opacity: 0.9;">🔽 Watch as our AI analyzes interviews in real-time ! 🔽</p>
+		<div class="video-wrapper">
+			<iframe src="https://www.youtube.com/embed/xJ4j7e8lJmA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+		</div>
+    </div>
+
+	<style>
+		.video-wrapper { position: relative; width: 100%; height: 0; padding-bottom: 56.25%; margin: 20px auto; }
+		.video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+	</style>
   </section>
 
   <section class="pricing" id="pricing">
@@ -731,10 +687,10 @@
         <h3>Starter</h3>
         <div class="price">Free</div>
         <ul class="price-features">
-          <li>Evaluation Kit</li>
+          <li>Mac evaluation kit</li>
+          <li>Windows early preview</li>
           <li>Basic AI analysis</li>
           <li>Standard reports</li>
-          <li>Email support</li>
         </ul>
         <button class="btn btn-secondary contact-sales-btn" id="btn1">Request a Demo</button>
       </div>
@@ -754,9 +710,9 @@
         <div class="price">Custom</div>
         <ul class="price-features">
           <li>Unlimited interviews</li>
-          <li>Full AI suite</li>
+          <li>On-premise hosting</li>
           <li>24/7 dedicated support</li>
-          <li>Custom integrations</li>
+          <li>Meeting app integrations</li>
         </ul>
         <button class="btn btn-secondary contact-sales-btn" id="btn3">Contact Sales</button>
       </div>
@@ -862,63 +818,10 @@
       checkScroll();
       handleHeaderScroll();
     });
-
-    // Demo video play button
-    document.querySelector('.play-button').addEventListener('click', function() {
-      alert('Demo video would play here! 🎬\n\nThis would showcase:\n• Real-time AI analysis\n• Eye tracking visualization\n• Behavioral scoring\n• Interview insights');
-    });
   
 // Mobile nav toggle
 document.getElementById('navToggle').addEventListener('click', function () {
   document.querySelector('nav ul').classList.toggle('show');
-});
-
-// Real-time scroll-synced Y transform based on viewport entry
-function updateScrollLinkedCards() {
-  const cards = document.querySelectorAll('.analyze-card');
-  const viewportHeight = window.innerHeight;
-
-  cards.forEach((card, index) => {
-    const rect = card.getBoundingClientRect();
-    const cardCenter = rect.top + rect.height / 2;
-    const progress = 1 - Math.min(Math.max(cardCenter / viewportHeight, 0), 1);
-    const translateY = 50 * (1 - progress); // from 50px to 0px
-    const opacity = progress;
-
-    card.style.transform = `translateY(${translateY}px)`;
-    card.style.opacity = opacity;
-  });
-}
-
-window.addEventListener("scroll", () => requestAnimationFrame(updateScrollLinkedCards));
-window.addEventListener("load", updateScrollLinkedCards);
-
-// Scroll-up animation: image cards slide into place and become visible just as they enter view
-document.addEventListener("DOMContentLoaded", () => {
-  const cards = document.querySelectorAll(".analyze-card");
-  const container = document.querySelector(".status-cards");
-
-  function updateCardScrollAnimation() {
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const triggerStart = viewportHeight;
-    const triggerEnd = viewportHeight * 0.5;
-
-    let progress = (triggerStart - rect.top) / (triggerStart - triggerEnd);
-    progress = Math.min(Math.max(progress, 0), 1);
-
-    const translateY = 30 * (1 - progress); // slide up from 30px to 0px
-    const opacity = 0.3 + 0.7 * progress;   // fade from 0.3 to 1.0
-
-    cards.forEach(card => {
-      card.style.transform = `translateY(${translateY}px)`;
-      card.style.opacity = opacity;
-    });
-  }
-
-  window.addEventListener("scroll", () => requestAnimationFrame(updateCardScrollAnimation));
-  window.addEventListener("load", updateCardScrollAnimation);
 });
 
 </script>
